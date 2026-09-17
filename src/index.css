@@ -16,12 +16,13 @@
 body {
   margin: 0;
   padding: 2rem 1rem;
+  line-height: normal;
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: var(--font-mono);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  /* align-items: flex-start; */
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -40,6 +41,7 @@ body {
 }
 
 h1 {
+  font-weight: bold;
   font-size: 1.8rem;
   color: var(--accent);
   margin-bottom: 0.5rem;
@@ -47,6 +49,7 @@ h1 {
 }
 
 h2 {
+  font-weight: bold;
   font-size: 1.1rem;
   margin-top: 0;
   margin-bottom: 1rem;
@@ -144,7 +147,7 @@ input[type="file"] {
 /* Chevron Rotation Animation */
 .chevron-icon {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   transition: transform 0.3s ease-out;
 }
 
@@ -320,6 +323,7 @@ canvas {
   border: none;
   font-family: var(--font-mono);
   font-weight: 700;
+  font-size: small;
   padding: 0.5rem 1.25rem;
   border-radius: 6px;
   cursor: pointer;
@@ -630,7 +634,6 @@ canvas {
   }
 
   .card-header {
-    flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
@@ -657,9 +660,15 @@ canvas {
 }
 
 /* Tablet Screens (641px - 1024px) */
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 481px) and (max-width: 640px) {
   .grid-cell-group {
     grid-template-columns: 200px 1fr;
+  }
+}
+
+@media (min-width: 641px) {
+  .grid-cell-group {
+    grid-template-columns: 240px 1fr;
   }
 }
 

@@ -23,7 +23,7 @@ export const AudioVisualizer: React.FC = () => {
 
     // Metadata Display State
     // const [metadata, setMetadata] = useState<MetadataRecord | null>(null);
-    const [metaPlaceholder, setMetaPlaceholder] = useState<string>('No audio file loaded');
+    const [metaPlaceholder, setMetaPlaceholder] = useState<string>('');
     const [metadataRows, setMetadataRows] = useState<MetadataRow[]>([]);
     const [progressText, setProgressText] = useState<string>('0.00s / 0.00s');
     const [descriptors, setDescriptors] = useState<string>('');
@@ -32,10 +32,10 @@ export const AudioVisualizer: React.FC = () => {
 
     // Visualizer Customization Config State
     const [config, setConfig] = useState<VisualizerConfig>({
-        windowSize: 2048,
-        sampleSkip: 20,
+        windowSize: 1024,
+        sampleSkip: 9,
         thickness: 2,
-        secondaryOpacity: 0.45,
+        secondaryOpacity: 0.5,
         frequencyCount: 512,
         barGap: 1.5,
         barFrequency: 1.0,

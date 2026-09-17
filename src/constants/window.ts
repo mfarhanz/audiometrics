@@ -1,1 +1,1 @@
-export const WINDOW_SIZE_STEPS : number[] = [512, 1024, 2048, 4096] as const;
+export const WINDOW_SIZE_STEPS : number[] = [16, 32, 64, 128, 256, 512, 800, 1024, 1600, 2048, 2400, 3200, 4096] as const;
