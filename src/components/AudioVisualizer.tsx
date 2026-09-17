@@ -26,7 +26,7 @@ export const AudioVisualizer: React.FC = () => {
     const [metaPlaceholder, setMetaPlaceholder] = useState<string>('');
     const [metadataRows, setMetadataRows] = useState<MetadataRow[]>([]);
     const [progressText, setProgressText] = useState<string>('0.00s / 0.00s');
-    const [descriptors, setDescriptors] = useState<string>('');
+    const [descriptors, setDescriptors] = useState<string[]>([]);
     const [isMetaLoading, setIsMetaLoading] = useState<boolean>(false);
     const [metaError, setMetaError] = useState<boolean>(false);
 
@@ -262,14 +262,6 @@ export const AudioVisualizer: React.FC = () => {
                 setPrimaryChannel('left');
                 setIsStereo(false);
             }
-
-            // // Initial metadata
-            // setMetadata({
-            //     'Sample Rate': `${decodedBuffer.sampleRate} Hz`,
-            //     'Duration': `${decodedBuffer.duration.toFixed(2)}s`,
-            //     'Channels': decodedBuffer.numberOfChannels === 2 ? 'Stereo' : 'Mono',
-            //     'Bit Depth': '32-bit Float (Decoded)',
-            // });
 
             // Load all other metadata asynchronously with progressive state updates
             const result = await loadMetadata(leftData, decodedBuffer, rightData, (partialRows) => {

@@ -1,9 +1,3 @@
-// export interface MetadataEntry {
-//   value: string;
-//   color?: string;
-//   info?: string;
-// }
-
 export interface MetadataRow {
   label: string;
   value: string;
@@ -13,10 +7,8 @@ export interface MetadataRow {
 
 export interface MetadataResult {
   rows: MetadataRow[];
-  audioDescriptors: string;
+  audioDescriptors: string[];
 }
-
-// export type MetadataRecord = Record<string, MetadataEntry | string>;
 
 export interface BasicFeatures {
   channels: number;

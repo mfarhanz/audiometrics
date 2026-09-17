@@ -3,7 +3,7 @@ import type { MetadataRow } from '../types/metadata';
 
 interface MetadataDisplayProps {
     rows: MetadataRow[];
-    descriptors?: string;
+    descriptors?: string[];
     placeholderText?: string;
     isLoading?: boolean;
     isError?: boolean;
@@ -29,16 +29,28 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
     return (
         <div className="metadata-display placeholder-text">
             {/* Audio Summary / Descriptors Badge */}
-            {descriptors && (
+            {descriptors && descriptors.length > 0 && (
                 <div className="audio-summary">
-                    <strong>Profile:</strong> {descriptors}
+                    <strong className="audio-summary-label">Profile:</strong>
+                    <div className="summary-pill-group">
+                        {descriptors.map((desc, idx) => (
+                            <span
+                                key={`${desc}-${idx}`}
+                                className={`summary-pill pill-color-${idx % 5}`}
+                            >
+                                {desc}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             )}
 
             {/* Progressive loading indicator banner while rows are still streaming in */}
             {isLoading && (
                 <div className="meta-loading">
-                    <span>{placeholderText || 'Analyzing audio features...'}</span>
+                    <span className="loading-shimmer-text">
+                        {placeholderText || 'Analyzing audio features...'}
+                    </span>
                 </div>
             )}
 

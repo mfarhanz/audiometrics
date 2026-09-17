@@ -87,5 +87,5 @@ export function deriveAudioDescriptors(stats: AudioStats) {
         if (stereoCorrelationVal >= 0.98) descriptors.push("Boxy");
     }
 
-    return descriptors.length > 0 ? descriptors.join(" • ") : "Neutral / Standard";
+    return descriptors.length > 0 ? descriptors : ["Neutral / Standard"];
 }
