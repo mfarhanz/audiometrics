@@ -5,14 +5,14 @@ import type { AudioFileInfo } from '../types/audio';
 import { MetadataDisplay } from './MetadataDisplay';
 import { PaletteManager } from './PaletteManager';
 import { drawOscilloscopeFrame, drawSpectrumFrame } from '../utils/canvasRenderers';
-import { WINDOW_SIZE_STEPS } from '../constants/window';
 import { loadMetadata } from '../services/metadataLoader';
+import { WINDOW_SIZE_STEPS } from '../constants/window';
 
 export const AudioVisualizer: React.FC = () => {
     // Mode & Drawer State (Replaces classList.toggle)
     const [mode, setMode] = useState<VisualizerMode>('oscilloscope');
     const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-    const [isMetaOpen, setIsMetaOpen] = useState<boolean>(false);
+    const [isMetaOpen, setIsMetaOpen] = useState<boolean>(true);
 
     // Audio Processing State
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -337,7 +337,7 @@ export const AudioVisualizer: React.FC = () => {
                         title="Toggle Metadata Details"
                         onClick={() => setIsMetaOpen(!isMetaOpen)}
                     >
-                        <span className="chevron-icon">{isMetaOpen ? '▲' : '▼'}</span>
+                        <span className="chevron-icon">{'▲'}</span>
                     </button>
                 </div>
 

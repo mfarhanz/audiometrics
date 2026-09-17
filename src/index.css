@@ -8,24 +8,28 @@
   --text-muted: #94a3b8;
   --accent: #38bdf8;
   --accent-glow: rgba(56, 189, 248, 0.15);
-  --font-mono: 'JetBrains Mono', monospace, ui-monospace, Consolas;
+  --font-mono: 'JetBrains Mono', monospace;
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 body {
   margin: 0;
-  padding: 2rem;
+  padding: 2rem 1rem;
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: var(--font-mono);
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
-#root {
+/* #root {
   width: 100%;
   max-width: 800px;
-}
+} */
 
 .container {
   width: 100%;
@@ -59,6 +63,7 @@ h2 {
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+  /* flex-wrap: wrap; */
 }
 
 .file-label {
@@ -69,10 +74,15 @@ h2 {
   border-radius: 6px;
   cursor: pointer;
   transition: opacity 0.2s;
+  user-select: none;
 }
 
 .file-label:hover {
   opacity: 0.9;
+}
+
+.file-label:active {
+  transform: scale(0.97);
 }
 
 input[type="file"] {
@@ -97,6 +107,10 @@ input[type="file"] {
   font-style: italic;
 }
 
+.error-text {
+  color: #f87171;
+}
+
 /* Card Header alignment for Metadata */
 #metaCard .card-header {
   display: flex;
@@ -116,7 +130,9 @@ input[type="file"] {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, 
+              border-color 0.2s ease, 
+              color 0.2s ease;
 }
 
 .icon-toggle-btn:hover {
@@ -134,14 +150,17 @@ input[type="file"] {
 
 .meta-drawer.open + .card-header .chevron-icon,
 .icon-toggle-btn.active .chevron-icon {
-  transform: rotate(180deg);
+  transform: rotate(-180deg);
 }
 
 /* Metadata Drawer Layout */
 .meta-drawer {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.35s ease-out, margin-top 0.35s ease, padding 0.35s ease-out, opacity 0.25s ease-out;
+  transition: max-height 0.35s ease-out, 
+              margin-top 0.35s ease, 
+              padding 0.35s ease-out, 
+              opacity 0.25s ease-out;
   opacity: 0;
   background: rgba(15, 23, 42, 0.3);
   border-radius: 8px;
@@ -199,17 +218,21 @@ input[type="file"] {
 
 .grid-key {
   color: var(--text-muted, #a0a0a0);
+  /* word-break: break-word; */
 }
 
 .grid-val {
   color: var(--accent, #646cff);
+  /* word-break: break-word; */
 }
 
 /* Dropdown Info Drawer Styles */
 .info-drawer {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.25s ease-out, opacity 0.2s ease-out, margin 0.25s ease-out;
+  transition: grid-template-rows 0.25s ease-out, 
+              opacity 0.2s ease-out, 
+              margin 0.25s ease-out;
   opacity: 0;
   overflow: hidden;
   margin: 5px;
@@ -233,7 +256,7 @@ input[type="file"] {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
-  transition: padding 0.25s ease-out;
+  transition: padding 0.25s ease;
 }
 
 .grid-row:hover .info-drawer-content {
@@ -279,6 +302,8 @@ pre {
 canvas {
   width: 100%;
   height: 38vh;
+  min-height: 220px;
+  max-height: 480px;
   display: block;
 }
 
@@ -286,6 +311,7 @@ canvas {
   display: flex;
   align-items: center;
   gap: 1rem;
+  /* flex-wrap: wrap; */
 }
 
 .control-btn {
@@ -297,11 +323,15 @@ canvas {
   padding: 0.5rem 1.25rem;
   border-radius: 6px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease, transform 0.1s ease;
 }
 
 .control-btn:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.control-btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .control-btn:disabled {
@@ -335,12 +365,14 @@ canvas {
   margin: 0;
 }
 
+/* Flex Wrapper for Right-Side Actions */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
+/* Toggle Pill Container */
 .toggle-group {
   display: flex;
   background: rgba(15, 23, 42, 0.6);
@@ -348,6 +380,7 @@ canvas {
   border-radius: 20px;
   padding: 3px;
   gap: 2px;
+  width: 80%;
 }
 
 .toggle-btn {
@@ -373,6 +406,7 @@ canvas {
   box-shadow: 0 0 8px rgba(94, 199, 244, 0.4);
 }
 
+/* Config Toggle Button */
 .config-toggle-btn {
   background: transparent;
   border: 1px solid var(--border-color);
@@ -395,24 +429,36 @@ canvas {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+.config-toggle-btn:active {
+  transform: scale(0.95);
+}
+
 .config-toggle-btn.active {
   background: var(--border-color);
   border-color: var(--accent);
 }
 
+/* Config Drawer Layout */
 .config-drawer {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out, margin-top 0.3s ease, padding 0.3s ease-out;
+  transition: max-height 0.35s ease-out, 
+              margin-top 0.35s ease-out, 
+              padding 0.35s ease-out,
+              opacity 0.25s ease-out;
+  opacity: 0;
   background: rgba(15, 23, 42, 0.4);
   border-radius: 8px;
   border: 1px solid transparent;
+  /* scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(15, 23, 42, 0.4); */
 }
 
 .config-drawer.open {
   max-height: 500px;
   margin-top: 1rem;
   padding: 1rem;
+  opacity: 1;
   border-color: var(--border-color);
 }
 
@@ -432,6 +478,12 @@ canvas {
   grid-column: 1 / -1;
 }
 
+/* Hide inactive mode inputs */
+.config-item[data-mode="oscilloscope"].hidden,
+.config-item[data-mode="spectrum"].hidden {
+  display: none !important;
+}
+
 .config-item label {
   font-size: 0.75rem;
   font-family: var(--font-mono);
@@ -446,11 +498,13 @@ canvas {
   font-weight: bold;
 }
 
+/* Sliders */
 .config-item input[type="range"] {
   accent-color: var(--accent);
   cursor: pointer;
 }
 
+/* Color Pickers */
 .color-picker-wrapper {
   display: flex;
   align-items: center;
@@ -458,7 +512,6 @@ canvas {
 }
 
 .color-picker-wrapper input[type="color"] {
-  -webkit-appearance: none;
   border: none;
   width: 28px;
   height: 28px;
@@ -476,6 +529,7 @@ canvas {
   border-radius: 50%;
 }
 
+/* Gradient Palette Builder */
 .gradient-header {
   display: flex;
   justify-content: space-between;
@@ -493,6 +547,11 @@ canvas {
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.mini-btn:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .mini-btn:disabled {
@@ -514,6 +573,11 @@ canvas {
   border: 1px solid var(--border-color);
   padding: 0.2rem 0.4rem;
   border-radius: 16px;
+  transition: transform 0.15s ease;
+}
+
+.palette-swatch:hover {
+  transform: translateY(-1px);
 }
 
 .palette-swatch input[type="color"] {
@@ -543,4 +607,74 @@ canvas {
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0 0.2rem;
+  transition: color 0.15s ease;
+}
+
+.remove-swatch-btn:hover {
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   RESPONSIVE OPTIMIZATIONS FOR ALL DISPLAY SIZES
+   ========================================================================== */
+
+/* Mobile / Small Screens (up to 640px) */
+@media (max-width: 640px) {
+  body {
+    padding: 1rem 0.75rem;
+  }
+
+  .grid-cell-group {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .toggle-group {
+    width: auto;
+    flex-grow: 1;
+    justify-content: center;
+  }
+
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  canvas {
+    height: 30vh;
+    min-height: 180px;
+  }
+}
+
+/* Tablet Screens (641px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-cell-group {
+    grid-template-columns: 200px 1fr;
+  }
+}
+
+/* Ultrawide / 4K Monitors (1920px and above) */
+@media (min-width: 1920px) {
+  #root, .container {
+    max-width: 960px;
+  }
+
+  body {
+    padding-top: 4rem;
+  }
+
+  canvas {
+    height: 32vh;
+    max-height: 520px;
+  }
 }
