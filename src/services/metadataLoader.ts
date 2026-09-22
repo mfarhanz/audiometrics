@@ -21,9 +21,8 @@ export async function loadMetadata(
     const arrayShape = channels > 1 ? [channels, totalSamples] : [totalSamples];
     // const arrayShape = channels > 1 ? `[${channels}, ${totalSamples}]` : `[${totalSamples}]`;
     const memoryMb = ((totalSamples * channels * 4) / (1024 * 1024));
-    console.log(totalSamples, length);
 
-    // 1. Basic Buffer Info
+    // Basic Buffer Info
     rows.push(
         {
             label: "Channels:",
@@ -58,7 +57,7 @@ export async function loadMetadata(
     );
     onProgress?.([...rows]);
 
-    // 2. Async Tempo & Time Domain Processing
+    // Async Tempo & Time Domain Processing
     const [tempoStats, timeStats] = await Promise.all([
         estimateTempo(data, sampleRate),
         computeTimeDomainFeatures(data, rightData, buffer),
@@ -168,7 +167,7 @@ export async function loadMetadata(
     });
     onProgress?.([...rows]);
 
-    // 4. Async Spectral Processing
+    // Async Spectral Processing
     const spectralStats = await computeSpectralFeatures(data, sampleRate);
 
     rows.push({

@@ -140,6 +140,12 @@ export const AudioVisualizer: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        // Only pull fresh FFT frequency data from AnalyserNode while playing.
+        // When paused, frequencyDataRef.current retains the final active snapshot.
+        if (isPlayingRef.current && analyserNodeRef.current && frequencyDataRef.current) {
+            analyserNodeRef.current.getByteFrequencyData(frequencyDataRef.current);
+        }
+
         const renderCtx: RenderContext = {
             canvas,
             ctx,
@@ -152,7 +158,7 @@ export const AudioVisualizer: React.FC = () => {
             rightChannel: rightChannelRef.current,
             analyserNode: analyserNodeRef.current,
             frequencyData: frequencyDataRef.current,
-            isPlaying,
+            isPlaying: isPlayingRef.current,
         };
 
         if (mode === 'oscilloscope') {
@@ -160,7 +166,34 @@ export const AudioVisualizer: React.FC = () => {
         } else {
             drawSpectrumFrame(renderCtx);
         }
-    }, [mode, config, primaryChannel, isPlaying]);
+    }, [mode, config, primaryChannel]);
+
+    const resetPlayback = useCallback(() => {
+        // Stop active WebAudio playback source
+        stopAudioPlayback();
+
+        // Cancel scheduled requestAnimationFrame loop
+        if (animationIdRef.current) {
+            cancelAnimationFrame(animationIdRef.current);
+            animationIdRef.current = null;
+        }
+
+        // Clear stored frequency data snapshot on reset
+        if (frequencyDataRef.current) {
+            frequencyDataRef.current.fill(0);
+        }
+
+        // Reset index and timing references
+        currentIndexRef.current = 0;
+        lastTimeRef.current = performance.now();
+
+        // Update play state (triggers UI re-render for Play button label)
+        updatePlayingState(false);
+
+        // Draw initial frame and refresh progress text
+        renderCurrentFrame();
+        updateProgressUI();
+    }, [stopAudioPlayback, updatePlayingState, renderCurrentFrame, updateProgressUI]);
 
     const animate = useCallback((currentTime: number) => {
         // Read from Ref instead of state to prevent stale closure lock
@@ -200,9 +233,13 @@ export const AudioVisualizer: React.FC = () => {
 
         if (isPlayingRef.current) {
             // PAUSE
-            stopAudioPlayback();
+            if (animationIdRef.current) {
+                cancelAnimationFrame(animationIdRef.current);
+                animationIdRef.current = null;
+            }
+
             updatePlayingState(false);
-            if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+            stopAudioPlayback();
         } else {
             // PLAY
             startAudioPlayback();
@@ -608,11 +645,7 @@ export const AudioVisualizer: React.FC = () => {
                         id="resetBtn"
                         className="control-btn secondary"
                         disabled={!isAudioLoaded}
-                        onClick={() => {
-                            currentIndexRef.current = 0;
-                            renderCurrentFrame();
-                            updateProgressUI();
-                        }}
+                        onClick={resetPlayback}
                     >
                         Reset
                     </button>
