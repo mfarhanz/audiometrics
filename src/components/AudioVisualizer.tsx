@@ -101,17 +101,18 @@ export const AudioVisualizer: React.FC = () => {
         }
     }, []);
 
-    const startAudioPlayback = useCallback(() => {
+    const startAudioPlayback = useCallback(async () => {
         const audioBuffer = audioBufferRef.current;
         if (!audioBuffer) return;
 
         if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+            const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            audioContextRef.current = new AudioCtxClass();
         }
         const audioCtx = audioContextRef.current;
 
         if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+            await audioCtx.resume();
         }
 
         stopAudioPlayback();
@@ -228,7 +229,7 @@ export const AudioVisualizer: React.FC = () => {
         }
     }, [config.windowSize, stopAudioPlayback, renderCurrentFrame, updateProgressUI, updatePlayingState]);
 
-    const togglePlayPause = () => {
+    const togglePlayPause = async () => {
         if (!leftChannelRef.current) return;
 
         if (isPlayingRef.current) {
@@ -242,7 +243,7 @@ export const AudioVisualizer: React.FC = () => {
             stopAudioPlayback();
         } else {
             // PLAY
-            startAudioPlayback();
+            await startAudioPlayback();
             updatePlayingState(true);
             lastTimeRef.current = performance.now();
             animationIdRef.current = requestAnimationFrame(animate);
