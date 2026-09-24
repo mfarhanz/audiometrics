@@ -36,7 +36,7 @@ export async function loadMetadata(
         },
         {
             label: "Duration:",
-            value: `${duration.toFixed(2)} seconds`,
+            value: `${Math.floor(duration / 60)}m ${Math.floor(duration % 60)}s`,
             info: "Total temporal length of the audio buffer in seconds."
         },
         {
@@ -46,7 +46,7 @@ export async function loadMetadata(
         },
         {
             label: "Audio Tensor Shape:",
-            value: arrayShape.toString(),
+            value: `[${arrayShape.toString()}]`,
             info: "Dimensional array layout of raw sample memory: [Channels, Total Samples]."
         },
         {
@@ -97,12 +97,12 @@ export async function loadMetadata(
         info: "Root Mean Square linear average power (0.0 silence to 1.0 full square wave). Optimal musical density rests between 0.10 and 0.20."
     }, {
         label: "RMS Power (dBFS):",
-        value: `${timeStats.rmsDb} dB (${timeStats.rmsVal.toFixed(4)})`,
+        value: `${timeStats.rmsDb.toFixed(2)} dB (${timeStats.rmsVal.toFixed(4)})`,
         color: getScoreColor(timeStats.rmsDb, 'rmsDb'),
         info: "Average perceived loudness/energy level. Range: -∞ (silence) to 0.0 dBFS. Optimal commercial audio rests between -18.0 dBFS (dynamic) and -10.0 dBFS (loud/compressed)."
     }, {
         label: "Dynamic Range (Crest):",
-        value: `${timeStats.crestFactorDb} dB`,
+        value: `${timeStats.crestFactorDb.toFixed(2)} dB`,
         color: getScoreColor(timeStats.crestFactorDb, 'crestFactorDb'),
         info: "Peak-to-RMS ratio measuring dynamic punch. 0 dB indicates heavy brickwall limiting/square wave; >18 dB indicates high dynamic contrast (classical/orchestral). Optimal range: 10 dB to 16 dB."
     }, {
@@ -122,7 +122,7 @@ export async function loadMetadata(
         info: "Average absolute amplitude deviation from zero (0.0 to 1.0). Reflects raw waveform area density. Optimal range: 0.08 to 0.15."
     }, {
         label: "Avg Zero-Cross Frequency:",
-        value: `~${Math.round(timeStats.zcrHz).toLocaleString()} Hz`,
+        value: `~${Math.round(timeStats.zcrHz)} Hz`,
         info: "Estimated fundamental frequency bias based on mean signal zero-crossing points per second. Range: 0 Hz to Nyquist (Sample Rate / 2)."
     }, {
         label: "Zero-Crossing Rate (ZCR):",

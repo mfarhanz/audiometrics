@@ -23,8 +23,8 @@ export function getScoreColor(val: number | string, metricType: TargetMetricType
         return '#e74c3c';
 
       case 'rmsDb':
-        if (val >= -18.0 && val <= -12.0) return '#2ecc71';
-        if ((val >= -24.0 && val < -18.0) || (val > -12.0 && val <= -6.0)) return '#f1c40f';
+        if (val >= -18.0 && val <= -10.0) return '#2ecc71';
+        if ((val >= -24.0 && val < -18.0) || (val > -10.0 && val <= -6.0)) return '#f1c40f';
         return '#e74c3c';
 
       case 'mavVal':

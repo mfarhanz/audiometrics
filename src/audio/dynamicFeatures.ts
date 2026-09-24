@@ -161,7 +161,7 @@ export async function computeTimeDomainFeatures(
     // Zero-Crossing
     const zcrRatio = timeStats.zeroCrossings / (totalSamples - 1);
     const zcrHz = (timeStats.zeroCrossings / duration) / 2;
-    const prominentBand = `~${Math.round(zcrHz).toLocaleString()} Hz (${zcrHz < 300 ? 'Bass' : zcrHz > 2000 ? 'Treble' : 'Midrange'})`;
+    const prominentBand = `~${Math.round(zcrHz)} Hz (${zcrHz < 300 ? 'Bass' : zcrHz > 2000 ? 'Treble' : 'Midrange'})`;
 
     // Temporal Centroid
     const temporalCentroidSec = timeStats.sumSquares > 0 ? (timeStats.weightedTimeEnergySum / timeStats.sumSquares) : (duration / 2);
