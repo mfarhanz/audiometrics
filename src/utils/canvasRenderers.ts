@@ -121,46 +121,6 @@ export function drawSpectrumFrame(renderCtx: RenderContext): void {
     const barWidth = width / activeBins - config.barGap;
     const binStep = totalBins / activeBins;
 
-    // for (let i = 0; i < activeBins; i++) {
-    //     const dataIndex = Math.floor(i * binStep);
-    //     const value = frequencyData[dataIndex] / 255.0;
-    //     const barHeight = Math.max(2, value * height);
-    //     const x = i * (barWidth + config.barGap);
-    //     const y = height - barHeight;
-
-    //     const gradient = ctx.createLinearGradient(0, height, 0, y);
-    //     if (config.barColors.length === 1) {
-    //         gradient.addColorStop(0, config.barColors[0]);
-    //         gradient.addColorStop(1, config.barColors[0]);
-    //     } else {
-    //         config.barColors.forEach((color, idx) => {
-    //             const stop = idx / (config.barColors.length - 1);
-    //             gradient.addColorStop(stop, color);
-    //         });
-    //     }
-
-    //     ctx.fillStyle = gradient;
-    //     ctx.shadowBlur = 3;
-    //     ctx.shadowColor = config.lineGlow;
-    //     ctx.fillRect(x, y, barWidth, barHeight);
-    // }
-
-
-    // CREATE A SINGLE GRADIENT FOR ALL BARS (Huge Mobile Performance Gain)
-    const gradient = ctx.createLinearGradient(0, height, 0, 0);
-    if (config.barColors.length === 1) {
-        gradient.addColorStop(0, config.barColors[0]);
-        gradient.addColorStop(1, config.barColors[0]);
-    } else {
-        config.barColors.forEach((color, idx) => {
-            const stop = idx / (config.barColors.length - 1);
-            gradient.addColorStop(stop, color);
-        });
-    }
-
-    // SET CANVAS STYLES ONCE
-    ctx.fillStyle = gradient;
-
     if (config.lineGlow && config.lineGlow !== 'transparent') {
         ctx.shadowBlur = 2;
         ctx.shadowColor = config.lineGlow;
@@ -168,20 +128,31 @@ export function drawSpectrumFrame(renderCtx: RenderContext): void {
         ctx.shadowBlur = 0;
     }
 
-    // BATCH GPU DRAW CALL FOR ALL BARS
-    ctx.beginPath();
-    
+    // Cache color palette stops to avoid string allocations during addColorStop
+    const colorStops = config.barColors.length === 1
+        ? [{ stop: 0, color: config.barColors[0] }, { stop: 1, color: config.barColors[0] }]
+        : config.barColors.map((color, idx) => ({
+            stop: idx / (config.barColors.length - 1),
+            color,
+        }));
+
+    // Draw bars
     for (let i = 0; i < activeBins; i++) {
         const dataIndex = Math.floor(i * binStep);
         const value = frequencyData[dataIndex] / 255.0;
         const barHeight = Math.max(2, value * height);
         const x = i * (barWidth + config.barGap);
         const y = height - barHeight;
-        ctx.rect(x, y, barWidth, barHeight);
-    }
 
-    // Single pass draw call for all bars
-    ctx.fill();
+        // Create gradient strictly between bottom (height) and top (y) of THIS bar
+        const gradient = ctx.createLinearGradient(0, height, 0, y);
+        for (let j = 0; j < colorStops.length; j++) {
+            gradient.addColorStop(colorStops[j].stop, colorStops[j].color);
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, barWidth, barHeight);
+    }
 
     ctx.shadowBlur = 0;
 }
