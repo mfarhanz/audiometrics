@@ -341,21 +341,24 @@ export const AudioVisualizer: React.FC = () => {
 
     return (
         <div className="container">
-            <h1>AudioInfo</h1>
+            <div className='constrained-container'>
+                <h1>AudioInfo</h1>
 
-            {/* File Upload Section */}
-            <div className="upload-section">
-                <label htmlFor="audioInput" className="file-label">Choose Audio File</label>
-                <input
-                    type="file"
-                    id="audioInput"
-                    accept=".mp3, .wav, audio/mpeg, audio/wav"
-                    onChange={handleFileUpload}
-                />
-                <span id="fileNameDisplay">
-                    {fileInfo ? `${fileInfo.name} (${fileInfo.sizeMb} MB)` : 'No file selected'}
-                </span>
+                {/* File Upload Section */}
+                <div className="upload-section">
+                    <label htmlFor="audioInput" className="file-label">Choose Audio File</label>
+                    <input
+                        type="file"
+                        id="audioInput"
+                        accept=".mp3, .wav, audio/mpeg, audio/wav"
+                        onChange={handleFileUpload}
+                    />
+                    <span id="fileNameDisplay">
+                        {fileInfo ? `${fileInfo.name} (${fileInfo.sizeMb} MB)` : 'No file selected'}
+                    </span>
+                </div>
             </div>
+
 
             {/* Metadata Card */}
             <div className="info-card" id="metaCard">
@@ -382,276 +385,278 @@ export const AudioVisualizer: React.FC = () => {
                 </div>
             </div>
 
-            {/* Visualizer Card */}
-            <div className="info-card" id="visualizerCard">
-                <div className="card-header">
-                    <h2 id="visualizerTitle">
-                        {mode === 'oscilloscope' ? 'Oscilloscope Visualizer' : 'Spectrum Visualizer'}
-                    </h2>
+            <div className='constrained-container'>
+                {/* Visualizer Card */}
+                <div className="info-card" id="visualizerCard">
+                    <div className="card-header">
+                        <h2 id="visualizerTitle">
+                            {mode === 'oscilloscope' ? 'Oscilloscope Visualizer' : 'Spectrum Visualizer'}
+                        </h2>
 
-                    <div className="header-actions">
-                        <div className="toggle-group">
+                        <div className="header-actions">
+                            <div className="toggle-group">
+                                <button
+                                    id="oscilloscopeModeBtn"
+                                    className={`toggle-btn ${mode === 'oscilloscope' ? 'active' : ''}`}
+                                    title="Time Domain Waveform"
+                                    onClick={() => setMode('oscilloscope')}
+                                >
+                                    Waveform
+                                </button>
+                                <button
+                                    id="spectrumModeBtn"
+                                    className={`toggle-btn ${mode === 'spectrum' ? 'active' : ''}`}
+                                    title="Frequency Spectrum (FFT)"
+                                    onClick={() => setMode('spectrum')}
+                                >
+                                    Spectrum
+                                </button>
+                            </div>
+
                             <button
-                                id="oscilloscopeModeBtn"
-                                className={`toggle-btn ${mode === 'oscilloscope' ? 'active' : ''}`}
-                                title="Time Domain Waveform"
-                                onClick={() => setMode('oscilloscope')}
+                                id="toggleConfigBtn"
+                                className={`config-toggle-btn ${isConfigOpen ? 'active' : ''}`}
+                                title="Toggle Configuration Panel"
+                                onClick={() => setIsConfigOpen(!isConfigOpen)}
                             >
-                                Waveform
-                            </button>
-                            <button
-                                id="spectrumModeBtn"
-                                className={`toggle-btn ${mode === 'spectrum' ? 'active' : ''}`}
-                                title="Frequency Spectrum (FFT)"
-                                onClick={() => setMode('spectrum')}
-                            >
-                                Spectrum
+                                ⚙️
                             </button>
                         </div>
+                    </div>
+
+                    {/* Configuration Panel */}
+                    <div id="configDrawer" className={`config-drawer ${isConfigOpen ? 'open' : ''}`}>
+                        <div className="config-grid">
+
+                            {/* COMMON SETTINGS */}
+                            <div className="config-item" data-mode="common">
+                                <label>Glow Color</label>
+                                <div className="color-picker-wrapper">
+                                    <input
+                                        type="color"
+                                        id="lineGlowPicker"
+                                        value={config.lineGlow}
+                                        onChange={(e) => updateConfig('lineGlow', e.target.value)}
+                                    />
+                                    <span className="hex-badge">{config.lineGlow}</span>
+                                </div>
+                            </div>
+
+                            {/* OSCILLOSCOPE SETTINGS */}
+                            {mode === 'oscilloscope' ? (
+                                <>
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Window Size: <span className="val-badge">{config.windowSize}</span></label>
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={WINDOW_SIZE_STEPS.length - 1}
+                                            step={1}
+                                            value={WINDOW_SIZE_STEPS.indexOf(config.windowSize)}
+                                            onChange={(e) =>
+                                                updateConfig('windowSize', WINDOW_SIZE_STEPS[Number(e.target.value)])
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Sample Skip: <span className="val-badge">{config.sampleSkip}</span></label>
+                                        <input
+                                            type="range"
+                                            min={1}
+                                            max={50}
+                                            step={1}
+                                            value={config.sampleSkip}
+                                            onChange={(e) => updateConfig('sampleSkip', Number(e.target.value))}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Thickness: <span className="val-badge">{config.thickness.toFixed(1)}</span></label>
+                                        <input
+                                            type="range"
+                                            min={0.5}
+                                            max={5.0}
+                                            step={0.5}
+                                            value={config.thickness}
+                                            onChange={(e) => updateConfig('thickness', Number(e.target.value))}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Background</label>
+                                        <div className="color-picker-wrapper">
+                                            <input
+                                                type="color"
+                                                value={config.oscBg}
+                                                onChange={(e) => updateConfig('oscBg', e.target.value)}
+                                            />
+                                            <span className="hex-badge">{config.oscBg}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Primary Wave Color</label>
+                                        <div className="color-picker-wrapper">
+                                            <input
+                                                type="color"
+                                                value={config.waveformBg}
+                                                onChange={(e) => updateConfig('waveformBg', e.target.value)}
+                                            />
+                                            <span className="hex-badge">{config.waveformBg}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* STEREO-ONLY CONTROLS */}
+                                    {isStereo && (
+                                        <>
+                                            <div className="config-item stereo-only" data-mode="oscilloscope">
+                                                <label>Secondary Wave Color</label>
+                                                <div className="color-picker-wrapper">
+                                                    <input
+                                                        type="color"
+                                                        value={config.waveformSecondaryBg}
+                                                        onChange={(e) => updateConfig('waveformSecondaryBg', e.target.value)}
+                                                    />
+                                                    <span className="hex-badge">{config.waveformSecondaryBg}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="config-item stereo-only" data-mode="oscilloscope">
+                                                <label>Primary Channel</label>
+                                                <div className="toggle-group">
+                                                    <button
+                                                        type="button"
+                                                        className={`toggle-btn ${primaryChannel === 'left' ? 'active' : ''}`}
+                                                        onClick={() => setPrimaryChannel('left')}
+                                                    >
+                                                        Left (L)
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`toggle-btn ${primaryChannel === 'right' ? 'active' : ''}`}
+                                                        onClick={() => setPrimaryChannel('right')}
+                                                    >
+                                                        Right (R)
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="config-item stereo-only" data-mode="oscilloscope">
+                                                <label>Secondary Wave Opacity: <span className="val-badge">{config.secondaryOpacity.toFixed(2)}</span></label>
+                                                <input
+                                                    type="range"
+                                                    min={0.0}
+                                                    max={1.0}
+                                                    step={0.05}
+                                                    value={config.secondaryOpacity}
+                                                    onChange={(e) => updateConfig('secondaryOpacity', Number(e.target.value))}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                /* SPECTRUM SETTINGS */
+                                <>
+                                    <div className="config-item" data-mode="spectrum">
+                                        <label>Frequency Count (FFT): <span className="val-badge">{config.frequencyCount}</span></label>
+                                        <input
+                                            type="range"
+                                            min={3}
+                                            max={10}
+                                            step={1}
+                                            value={Math.log2(config.frequencyCount)}
+                                            onChange={(e) => {
+                                                const newCount = Math.pow(2, Number(e.target.value));
+                                                updateConfig('frequencyCount', newCount);
+
+                                                if (analyserNodeRef.current) {
+                                                    analyserNodeRef.current.fftSize = newCount * 2;
+                                                    frequencyDataRef.current = new Uint8Array(
+                                                        analyserNodeRef.current.frequencyBinCount
+                                                    );
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="spectrum">
+                                        <label>Bar Gap: <span className="val-badge">{config.barGap.toFixed(1)}</span></label>
+                                        <input
+                                            type="range"
+                                            min={0.0}
+                                            max={30.0}
+                                            step={0.1}
+                                            value={config.barGap}
+                                            onChange={(e) => updateConfig('barGap', Number(e.target.value))}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="spectrum">
+                                        <label>Frequency Span: <span className="val-badge">{Math.round(config.barFrequency * 100)}%</span></label>
+                                        <input
+                                            type="range"
+                                            min={0.1}
+                                            max={1.0}
+                                            step={0.05}
+                                            value={config.barFrequency}
+                                            onChange={(e) => updateConfig('barFrequency', Number(e.target.value))}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="spectrum">
+                                        <label>Background</label>
+                                        <div className="color-picker-wrapper">
+                                            <input
+                                                type="color"
+                                                value={config.specBg}
+                                                onChange={(e) => updateConfig('specBg', e.target.value)}
+                                            />
+                                            <span className="hex-badge">{config.specBg}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* GRADIENT PALETTE MANAGER */}
+                                    <div className="config-item full-width" data-mode="spectrum">
+                                        <PaletteManager
+                                            barColors={config.barColors}
+                                            onChangeColors={(colors) => updateConfig('barColors', colors)}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                        </div>
+                    </div>
+
+                    {/* Main Canvas */}
+                    <div className="canvas-container">
+                        <canvas ref={canvasRef} width={800} height={240} />
+                    </div>
+
+                    {/* Playback Controls Row */}
+                    <div className="controls-row">
+                        <button
+                            id="playPauseBtn"
+                            className="control-btn"
+                            disabled={!isAudioLoaded}
+                            onClick={togglePlayPause}
+                        >
+                            {isPlaying ? 'Pause' : 'Play'}
+                        </button>
 
                         <button
-                            id="toggleConfigBtn"
-                            className={`config-toggle-btn ${isConfigOpen ? 'active' : ''}`}
-                            title="Toggle Configuration Panel"
-                            onClick={() => setIsConfigOpen(!isConfigOpen)}
+                            id="resetBtn"
+                            className="control-btn secondary"
+                            disabled={!isAudioLoaded}
+                            onClick={resetPlayback}
                         >
-                            ⚙️
+                            Reset
                         </button>
+
+                        <span id="progressDisplay">{progressText}</span>
                     </div>
-                </div>
-
-                {/* Configuration Panel */}
-                <div id="configDrawer" className={`config-drawer ${isConfigOpen ? 'open' : ''}`}>
-                    <div className="config-grid">
-
-                        {/* COMMON SETTINGS */}
-                        <div className="config-item" data-mode="common">
-                            <label>Glow Color</label>
-                            <div className="color-picker-wrapper">
-                                <input
-                                    type="color"
-                                    id="lineGlowPicker"
-                                    value={config.lineGlow}
-                                    onChange={(e) => updateConfig('lineGlow', e.target.value)}
-                                />
-                                <span className="hex-badge">{config.lineGlow}</span>
-                            </div>
-                        </div>
-
-                        {/* OSCILLOSCOPE SETTINGS */}
-                        {mode === 'oscilloscope' ? (
-                            <>
-                                <div className="config-item" data-mode="oscilloscope">
-                                    <label>Window Size: <span className="val-badge">{config.windowSize}</span></label>
-                                    <input
-                                        type="range"
-                                        min={0}
-                                        max={WINDOW_SIZE_STEPS.length - 1}
-                                        step={1}
-                                        value={WINDOW_SIZE_STEPS.indexOf(config.windowSize)}
-                                        onChange={(e) =>
-                                            updateConfig('windowSize', WINDOW_SIZE_STEPS[Number(e.target.value)])
-                                        }
-                                    />
-                                </div>
-
-                                <div className="config-item" data-mode="oscilloscope">
-                                    <label>Sample Skip: <span className="val-badge">{config.sampleSkip}</span></label>
-                                    <input
-                                        type="range"
-                                        min={1}
-                                        max={50}
-                                        step={1}
-                                        value={config.sampleSkip}
-                                        onChange={(e) => updateConfig('sampleSkip', Number(e.target.value))}
-                                    />
-                                </div>
-
-                                <div className="config-item" data-mode="oscilloscope">
-                                    <label>Thickness: <span className="val-badge">{config.thickness.toFixed(1)}</span></label>
-                                    <input
-                                        type="range"
-                                        min={0.5}
-                                        max={5.0}
-                                        step={0.5}
-                                        value={config.thickness}
-                                        onChange={(e) => updateConfig('thickness', Number(e.target.value))}
-                                    />
-                                </div>
-
-                                <div className="config-item" data-mode="oscilloscope">
-                                    <label>Background</label>
-                                    <div className="color-picker-wrapper">
-                                        <input
-                                            type="color"
-                                            value={config.oscBg}
-                                            onChange={(e) => updateConfig('oscBg', e.target.value)}
-                                        />
-                                        <span className="hex-badge">{config.oscBg}</span>
-                                    </div>
-                                </div>
-
-                                <div className="config-item" data-mode="oscilloscope">
-                                    <label>Primary Wave Color</label>
-                                    <div className="color-picker-wrapper">
-                                        <input
-                                            type="color"
-                                            value={config.waveformBg}
-                                            onChange={(e) => updateConfig('waveformBg', e.target.value)}
-                                        />
-                                        <span className="hex-badge">{config.waveformBg}</span>
-                                    </div>
-                                </div>
-
-                                {/* STEREO-ONLY CONTROLS */}
-                                {isStereo && (
-                                    <>
-                                        <div className="config-item stereo-only" data-mode="oscilloscope">
-                                            <label>Secondary Wave Color</label>
-                                            <div className="color-picker-wrapper">
-                                                <input
-                                                    type="color"
-                                                    value={config.waveformSecondaryBg}
-                                                    onChange={(e) => updateConfig('waveformSecondaryBg', e.target.value)}
-                                                />
-                                                <span className="hex-badge">{config.waveformSecondaryBg}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="config-item stereo-only" data-mode="oscilloscope">
-                                            <label>Primary Channel</label>
-                                            <div className="toggle-group">
-                                                <button
-                                                    type="button"
-                                                    className={`toggle-btn ${primaryChannel === 'left' ? 'active' : ''}`}
-                                                    onClick={() => setPrimaryChannel('left')}
-                                                >
-                                                    Left (L)
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className={`toggle-btn ${primaryChannel === 'right' ? 'active' : ''}`}
-                                                    onClick={() => setPrimaryChannel('right')}
-                                                >
-                                                    Right (R)
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="config-item stereo-only" data-mode="oscilloscope">
-                                            <label>Secondary Wave Opacity: <span className="val-badge">{config.secondaryOpacity.toFixed(2)}</span></label>
-                                            <input
-                                                type="range"
-                                                min={0.0}
-                                                max={1.0}
-                                                step={0.05}
-                                                value={config.secondaryOpacity}
-                                                onChange={(e) => updateConfig('secondaryOpacity', Number(e.target.value))}
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                            </>
-                        ) : (
-                            /* SPECTRUM SETTINGS */
-                            <>
-                                <div className="config-item" data-mode="spectrum">
-                                    <label>Frequency Count (FFT): <span className="val-badge">{config.frequencyCount}</span></label>
-                                    <input
-                                        type="range"
-                                        min={3}
-                                        max={10}
-                                        step={1}
-                                        value={Math.log2(config.frequencyCount)}
-                                        onChange={(e) => {
-                                            const newCount = Math.pow(2, Number(e.target.value));
-                                            updateConfig('frequencyCount', newCount);
-
-                                            if (analyserNodeRef.current) {
-                                                analyserNodeRef.current.fftSize = newCount * 2;
-                                                frequencyDataRef.current = new Uint8Array(
-                                                    analyserNodeRef.current.frequencyBinCount
-                                                );
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                <div className="config-item" data-mode="spectrum">
-                                    <label>Bar Gap: <span className="val-badge">{config.barGap.toFixed(1)}</span></label>
-                                    <input
-                                        type="range"
-                                        min={0.0}
-                                        max={30.0}
-                                        step={0.1}
-                                        value={config.barGap}
-                                        onChange={(e) => updateConfig('barGap', Number(e.target.value))}
-                                    />
-                                </div>
-
-                                <div className="config-item" data-mode="spectrum">
-                                    <label>Frequency Span: <span className="val-badge">{Math.round(config.barFrequency * 100)}%</span></label>
-                                    <input
-                                        type="range"
-                                        min={0.1}
-                                        max={1.0}
-                                        step={0.05}
-                                        value={config.barFrequency}
-                                        onChange={(e) => updateConfig('barFrequency', Number(e.target.value))}
-                                    />
-                                </div>
-
-                                <div className="config-item" data-mode="spectrum">
-                                    <label>Background</label>
-                                    <div className="color-picker-wrapper">
-                                        <input
-                                            type="color"
-                                            value={config.specBg}
-                                            onChange={(e) => updateConfig('specBg', e.target.value)}
-                                        />
-                                        <span className="hex-badge">{config.specBg}</span>
-                                    </div>
-                                </div>
-
-                                {/* GRADIENT PALETTE MANAGER */}
-                                <div className="config-item full-width" data-mode="spectrum">
-                                    <PaletteManager
-                                        barColors={config.barColors}
-                                        onChangeColors={(colors) => updateConfig('barColors', colors)}
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                    </div>
-                </div>
-
-                {/* Main Canvas */}
-                <div className="canvas-container">
-                    <canvas ref={canvasRef} width={800} height={240} />
-                </div>
-
-                {/* Playback Controls Row */}
-                <div className="controls-row">
-                    <button
-                        id="playPauseBtn"
-                        className="control-btn"
-                        disabled={!isAudioLoaded}
-                        onClick={togglePlayPause}
-                    >
-                        {isPlaying ? 'Pause' : 'Play'}
-                    </button>
-
-                    <button
-                        id="resetBtn"
-                        className="control-btn secondary"
-                        disabled={!isAudioLoaded}
-                        onClick={resetPlayback}
-                    >
-                        Reset
-                    </button>
-
-                    <span id="progressDisplay">{progressText}</span>
                 </div>
             </div>
         </div>

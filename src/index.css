@@ -34,7 +34,7 @@ body {
 
 .container {
   width: 100%;
-  max-width: 800px;
+  /* max-width: 800px; */
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -59,6 +59,10 @@ h2 {
 }
 
 @layer components {
+  .constrained-container {
+    @apply flex gap-[1.2rem] max-w-[52vw] flex-col ml-[23vw];
+  }
+
   .upload-section {
     @apply flex items-center gap-4 p-4 rounded-[8px] border border-solid;
     background-color: var(--card-bg);
@@ -299,7 +303,7 @@ h2 {
   }
 
   .card-header {
-    @apply flex justify-between items-center mb-1;
+    @apply flex justify-between items-center mb-1 flex-wrap;
   }
 
   .card-header h2 {
@@ -313,7 +317,7 @@ h2 {
 
   /* Toggle Pill Container */
   .toggle-group {
-    @apply flex bg-[#0f172a]/60 border border-solid rounded-[20px] p-[3px] w-[80%];
+    @apply flex flex-wrap bg-[#0f172a]/60 border border-solid rounded-[20px] p-[3px] w-[80%];
     border-color: var(--border-color);
   }
 
