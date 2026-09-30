@@ -342,10 +342,14 @@ export const AudioVisualizer: React.FC = () => {
     return (
         <div className="app-container">
             {/* Header & Upload Section */}
-            <div className='constrained-container dynamic-width'>
+            <div className={`constrained-container ${isMetaOpen ? 'expanded' : 'constrained'} dynamic-width`}>
                 <h1>AudioInfo</h1>
-                    <div className="upload-section">
-                    <label htmlFor="audioInput" className="file-label">Choose File</label>
+                <div className="upload-section">
+                    <label htmlFor="audioInput" className="file-label">
+                        <span className="label-text">
+                            {isMetaOpen ? '♫' : 'Choose File'}
+                        </span>
+                    </label>
                     <input
                         type="file"
                         id="audioInput"
