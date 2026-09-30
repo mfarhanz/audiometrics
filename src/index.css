@@ -22,45 +22,41 @@ body {
   font-family: var(--font-mono);
   display: flex;
   justify-content: center;
-  /* align-items: flex-start; */
   min-height: 100vh;
   box-sizing: border-box;
 }
 
-/* #root {
-  width: 100%;
-  max-width: 800px;
-} */
-
-.container {
-  width: 100%;
-  /* max-width: 800px; */
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-h1 {
-  font-weight: bold;
-  font-size: 1.8rem;
-  color: var(--accent);
-  margin-bottom: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-h2 {
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  color: #e2e8f0;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
 @layer components {
+  h1 {
+    @apply font-bold text-[1.8rem] my-2;
+    color: var(--accent);
+  }
+
+  h2 {
+    @apply font-bold text-lg mt-0 mb-2 pb-2 text-[#e2e8f0];
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .app-container {
+    @apply w-full flex flex-col gap-5 items-center;
+  }
+
   .constrained-container {
-    @apply flex gap-[1.2rem] max-w-[52vw] flex-col ml-[23vw];
+    @apply flex w-full gap-[1.2rem] flex-col mx-auto;
+  }
+
+  /* Smooth Expansion Wrapper for MetaCard */
+  .meta-card-wrapper {
+    @apply w-full transition-all duration-500 ease-in-out mx-auto;
+  }
+
+  .dynamic-width,
+  .meta-card-wrapper.constrained {
+    @apply max-w-[90vw] sm:max-w-[75vw] lg:max-w-[55vw] xl:max-w-[52vw];
+  }
+
+  .meta-card-wrapper.expanded {
+    @apply max-w-[96vw];
   }
 
   .upload-section {
@@ -71,6 +67,7 @@ h2 {
 
   .file-label {
     @apply font-bold py-[0.6rem] px-[1.2rem] rounded-[6px] cursor-pointer transition-opacity duration-200 select-none hover:opacity-90 active:scale-[0.97];
+    @apply text-[0.85rem] sm:text-[0.9rem] lg:text-[1rem];
     background-color: var(--accent);
     color: #0f172a;
   }
@@ -80,12 +77,12 @@ h2 {
   }
 
   #fileNameDisplay {
-    @apply text-[0.9rem];
+    @apply text-[0.85rem] sm:text-[0.9rem] lg:text-[1rem];
     color: var(--text-muted);
   }
 
   .info-card {
-    @apply p-[1.25rem] rounded-[8px] border border-solid;
+    @apply w-full p-[1.25rem] rounded-[8px] border border-solid transition-all duration-300;
     background-color: var(--card-bg);
     border-color: var(--border-color);
   }
@@ -112,12 +109,15 @@ h2 {
 
   /* Chevron Rotation Animation */
   .chevron-icon {
-    @apply inline-block text-[0.8rem] transition-transform duration-300 ease-out;
+    @apply text-[0.8rem];
   }
 
-  .meta-drawer.open+.card-header .chevron-icon,
+  .icon-toggle-btn .chevron-icon {
+    @apply inline-block transition-transform duration-300 ease-in-out;
+  }
+
   .icon-toggle-btn.active .chevron-icon {
-    @apply -rotate-180;
+    @apply rotate-180;
   }
 
   /* Metadata Drawer Layout */
@@ -273,7 +273,8 @@ h2 {
   }
 
   .control-btn {
-    @apply text-[#0f172a] border-none font-bold text-sm py-2 px-5 rounded-[6px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply text-[#0f172a] border-none font-bold py-2 px-5 rounded-[6px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply text-[0.75rem] sm:text-[0.8rem] lg:text-sm;
     font-family: var(--font-mono);
     background-color: var(--accent);
     transition: opacity 0.2s ease, transform 0.1s ease;
@@ -390,6 +391,10 @@ h2 {
   .hex-badge {
     @apply font-bold;
     color: var(--accent);
+  }
+
+  .hex-badge {
+    @apply text-sm sm:text-base lg:text-lg;
   }
 
   /* Sliders */
@@ -639,7 +644,7 @@ h2 {
 @media (min-width: 1920px) {
 
   #root,
-  .container {
+  .app-container {
     max-width: 960px;
   }
 

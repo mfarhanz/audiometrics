@@ -340,13 +340,12 @@ export const AudioVisualizer: React.FC = () => {
     }, [stopAudioPlayback]);
 
     return (
-        <div className="container">
-            <div className='constrained-container'>
+        <div className="app-container">
+            {/* Header & Upload Section */}
+            <div className='constrained-container dynamic-width'>
                 <h1>AudioInfo</h1>
-
-                {/* File Upload Section */}
-                <div className="upload-section">
-                    <label htmlFor="audioInput" className="file-label">Choose Audio File</label>
+                    <div className="upload-section">
+                    <label htmlFor="audioInput" className="file-label">Choose File</label>
                     <input
                         type="file"
                         id="audioInput"
@@ -361,32 +360,34 @@ export const AudioVisualizer: React.FC = () => {
 
 
             {/* Metadata Card */}
-            <div className="info-card" id="metaCard">
-                <div className="card-header">
-                    <h2>Audio Metadata</h2>
-                    <button
-                        id="toggleMetaBtn"
-                        className={`icon-toggle-btn ${isMetaOpen ? 'active' : ''}`}
-                        title="Toggle Metadata Details"
-                        onClick={() => setIsMetaOpen(!isMetaOpen)}
-                    >
-                        <span className="chevron-icon">{'▲'}</span>
-                    </button>
-                </div>
+            <div className={`meta-card-wrapper ${isMetaOpen ? 'expanded' : 'constrained'}`}>
+                <div className="info-card" id="metaCard">
+                    <div className="card-header ">
+                        <h2>Audio Metadata</h2>
+                        <button
+                            id="toggleMetaBtn"
+                            className={`icon-toggle-btn ${isMetaOpen ? 'active' : ''}`}
+                            title="Toggle Metadata Details"
+                            onClick={() => setIsMetaOpen(!isMetaOpen)}
+                        >
+                            <span className="chevron-icon">{'▲'}</span>
+                        </button>
+                    </div>
 
-                <div id="metaDrawer" className={`meta-drawer ${isMetaOpen ? 'open' : ''} ${isMetaLoading ? 'is-loading' : ''}`}>
-                    <MetadataDisplay
-                        rows={metadataRows}
-                        descriptors={descriptors}
-                        placeholderText={metaPlaceholder}
-                        isLoading={isMetaLoading}
-                        isError={metaError}
-                    />
+                    <div id="metaDrawer" className={`meta-drawer ${isMetaOpen ? 'open' : ''} ${isMetaLoading ? 'is-loading' : ''}`}>
+                        <MetadataDisplay
+                            rows={metadataRows}
+                            descriptors={descriptors}
+                            placeholderText={metaPlaceholder}
+                            isLoading={isMetaLoading}
+                            isError={metaError}
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className='constrained-container'>
-                {/* Visualizer Card */}
+            {/* Visualizer Card */}
+            <div className='constrained-container dynamic-width'>
                 <div className="info-card" id="visualizerCard">
                     <div className="card-header">
                         <h2 id="visualizerTitle">
