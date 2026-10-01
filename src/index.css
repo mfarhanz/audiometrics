@@ -74,11 +74,11 @@ body {
   }
 
   .meta-card-wrapper.expanded .info-card {
-    @apply p-0 bg-transparent border-none;
+    @apply p-0 bg-transparent border-transparent;
   }
 
   .meta-card-wrapper.expanded .card-header {
-    @apply mt-5 sm:mt-0 mb-0;
+    @apply mt-5 sm:mt-0 mb-0 mr-0;
   }
 
   /* Card Header alignment for Metadata */
@@ -148,23 +148,27 @@ body {
     @apply text-[#f87171];
   }
 
-  /* Minimalist Icon Toggle Button */
   .icon-toggle-btn {
-    @apply bg-transparent border border-solid text-[#94a3b8] rounded-[6px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer transition-colors duration-200 ease-in-out hover:bg-white/10 hover:text-[#f8fafc] hover:border-white/25;
+    @apply border border-solid rounded-[6px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer transition-colors duration-200 ease-in-out;
+    @apply bg-transparent text-[#94a3b8] hover:bg-white/10 hover:text-[#f8fafc] hover:border-white/25;
     border-color: var(--border-color, rgba(255, 255, 255, 0.1));
   }
 
   /* Chevron Rotation Animation */
   .chevron-icon {
-    @apply text-[0.8rem];
+    @apply text-[0.9rem] transition-colors transition-transform duration-200;
   }
 
   .icon-toggle-btn .chevron-icon {
-    @apply inline-block transition-transform duration-300 ease-in-out;
+    @apply inline-block transition-all duration-300 ease-in-out;
+  }
+
+  .icon-toggle-btn.active {
+    @apply border-transparent;
   }
 
   .icon-toggle-btn.active .chevron-icon {
-    @apply rotate-180;
+    @apply rotate-180 text-base text-cyan-600 drop-shadow-[0_0_5px_rgba(103,232,249)] transition-all duration-200;
   }
 
   /* Metadata Drawer Layout */
@@ -173,6 +177,7 @@ body {
     transition: max-height 0.35s ease-out,
       margin-top 0.35s ease,
       padding 0.35s ease-out,
+      border 0.2s ease-out,
       opacity 0.25s ease-out;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) rgba(15, 23, 42, 0.4);
@@ -351,7 +356,7 @@ body {
   }
 
   .card-header {
-    @apply flex justify-between items-center mb-1 flex-wrap;
+    @apply flex justify-between items-center mb-1 flex-wrap transition-all duration-500 ease-in-out;
   }
 
   .card-header h2 {

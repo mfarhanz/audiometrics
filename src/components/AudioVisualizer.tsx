@@ -12,7 +12,7 @@ export const AudioVisualizer: React.FC = () => {
     // Mode & Drawer State (Replaces classList.toggle)
     const [mode, setMode] = useState<VisualizerMode>('oscilloscope');
     const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-    const [isMetaOpen, setIsMetaOpen] = useState<boolean>(true);
+    const [isMetaOpen, setIsMetaOpen] = useState<boolean>(false);
 
     // Audio Processing State
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
