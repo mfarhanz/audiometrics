@@ -15,7 +15,6 @@ export const CrtSnackbar: React.FC<CrtSnackbarProps> = ({
   icon = '🛈',
   onClick,
 }) => {
-  // Encapsulate CRT state lifecycle (glow dot, turn-on sweep, text typewriter/fade, off animation)
   const { crtState, displayedText } = useCrtInspector(text);
 
   return (

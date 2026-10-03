@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { MetadataRow } from '../types/metadata';
 import { MetricGauge } from './MetricGauge';
 import { CrtSnackbar } from './CrtSnackbar';
+import { DESCRIPTOR_DEFINITIONS } from '../data/definitions';
 
 interface MetadataDisplayProps {
     rows: MetadataRow[];
@@ -41,6 +42,8 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
                             <span
                                 key={`${desc}-${idx}`}
                                 className={`summary-pill pill-color-${idx % 5}`}
+                                onMouseEnter={() => setActiveHoveredInfo(DESCRIPTOR_DEFINITIONS[desc.toLowerCase()])}
+                                onMouseLeave={() => setActiveHoveredInfo(null)}
                             >
                                 {desc}
                             </span>
@@ -67,8 +70,8 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
                         <div
                             key={`${row.label}-${idx}`}
                             className={`metric-card ${isGaugeMetric ? 'gauge-card' : 'info-card'}`}
-                        onMouseEnter={() => setActiveHoveredInfo(row.info || null)}
-                        onMouseLeave={() => setActiveHoveredInfo(null)}
+                            onMouseEnter={() => setActiveHoveredInfo(row.info || null)}
+                            onMouseLeave={() => setActiveHoveredInfo(null)}
                         >
                             {isGaugeMetric ? (
                                 <div className="gauge-card-inner">
