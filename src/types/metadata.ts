@@ -1,8 +1,17 @@
+import type { GaugeZone } from "./visualizer";
+
 export interface MetadataRow {
     label: string;
     value: string;
-    color?: string | null;
+    numericVal?: number; // Raw numeric value used to compute needle angle
     info?: string;
+    color?: string | null; // Null/empty for Neutral metrics; Hex string for Gauge metrics
+    gaugeConfig?: {
+        min: number;
+        max: number;
+        ticks?: (number | string)[];
+        zones?: GaugeZone[];
+    };
 }
 
 export interface MetadataResult {

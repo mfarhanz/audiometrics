@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { MetadataRow } from '../types/metadata';
+import { MetricGauge } from './MetricGauge';
+import { CrtSnackbar } from './CrtSnackbar';
 
 interface MetadataDisplayProps {
     rows: MetadataRow[];
@@ -16,6 +18,8 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
     isLoading,
     isError,
 }) => {
+    const [activeHoveredInfo, setActiveHoveredInfo] = useState<string | null>(null);
+
     // Show Error State
     if (isError) {
         return <div className="placeholder-text error-text">{placeholderText || 'An error occurred while analyzing metadata.'}</div>;
@@ -23,15 +27,15 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
 
     // Otherwise show Empty or Loading State (when no rows are computed yet)
     if (!rows || rows.length === 0) {
-        return <div className="placeholder-text">{placeholderText || 'Load an audio file to view metadata.'}</div>;
+        return <div className="placeholder-text flex justify-center">{placeholderText || 'Load an audio file to view metadata.'}</div>;
     }
 
     return (
-        <div className="metadata-display placeholder-text">
+        <div className="metadata-display select-none">
             {/* Audio Summary / Descriptors Badge */}
             {descriptors && descriptors.length > 0 && (
                 <div className="audio-summary">
-                    <strong className="audio-summary-label">Profile:</strong>
+                    <strong className="audio-summary-label">Remarks</strong>
                     <div className="summary-pill-group">
                         {descriptors.map((desc, idx) => (
                             <span
@@ -54,30 +58,51 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
                 </div>
             )}
 
-            {/* Metadata Table */}
-            <div className="grid-table">
-                {rows.map((row, idx) => (
-                    <div key={`${row.label}-${idx}`} className="grid-row">
-                        <div className="grid-cell-group">
-                            <div className="grid-key">{row.label}</div>
-                            <div
-                                className="grid-val"
-                                style={row.color ? { color: row.color } : undefined}
-                            >
-                                {row.value}
-                            </div>
-                        </div>
+            {/* Flexible Adaptive Grid for Metric Cards */}
+            <div className="meta-grid">
+                {rows.map((row, idx) => {
+                    const isGaugeMetric = Boolean(row.color);
 
-                        {row.info && (
-                            <div className="info-drawer">
-                                <div className="info-drawer-content">
-                                    <span className="info-icon">🛈</span> {row.info}
+                    return (
+                        <div
+                            key={`${row.label}-${idx}`}
+                            className={`metric-card ${isGaugeMetric ? 'gauge-card' : 'info-card'}`}
+                        onMouseEnter={() => setActiveHoveredInfo(row.info || null)}
+                        onMouseLeave={() => setActiveHoveredInfo(null)}
+                        >
+                            {isGaugeMetric ? (
+                                <div className="gauge-card-inner">
+                                    <MetricGauge
+                                        value={row.value}
+                                        numericVal={row.numericVal}
+                                        color={row.color || '#2ecc71'}
+                                        min={row.gaugeConfig?.min}
+                                        max={row.gaugeConfig?.max}
+                                        ticks={row.gaugeConfig?.ticks}
+                                        zones={row.gaugeConfig?.zones}
+                                    />
+                                    <div className="metric-label-group">
+                                        <span className="metric-name">{row.label}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                            ) : (
+                                <div className="info-card-inner">
+                                    <div className="lcd-screen">
+                                        <span className="lcd-value">{row.value}</span>
+                                    </div>
+                                    <div className="metric-label-group">
+                                        <span className="metric-name">{row.label}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
+
+            <CrtSnackbar
+                text={activeHoveredInfo}
+            />
         </div>
     );
 };

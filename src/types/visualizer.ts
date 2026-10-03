@@ -1,6 +1,12 @@
 export type VisualizerMode = 'oscilloscope' | 'spectrum';
 export type PrimaryChannel = 'left' | 'right';
 
+export interface GaugeZone {
+    min: number;
+    max: number;
+    color: string; // Green (#2ecc71), Yellow (#f1c40f), Red (#e74c3c)
+}
+
 export interface VisualizerConfig {
     windowSize: number;
     sampleSkip: number;
