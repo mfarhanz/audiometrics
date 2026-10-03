@@ -87,13 +87,13 @@ body {
   }
 
   .upload-section {
-    @apply flex items-center gap-4 p-4 rounded-[8px] border border-solid transition-all duration-500 ease-in-out;
+    @apply flex items-center gap-4 p-4 rounded-lg border border-solid transition-all duration-500 ease-in-out;
     background-color: var(--card-bg);
     border-color: var(--border-color);
   }
 
   .file-label {
-    @apply font-bold py-[0.6rem] px-[1.2rem] rounded-[6px] cursor-pointer select-none;
+    @apply font-bold py-[0.6rem] px-[1.2rem] rounded-md cursor-pointer select-none;
     @apply hover:opacity-90 active:scale-[0.97] transition-all duration-500 ease-in-out;
     @apply text-[0.85rem] sm:text-[0.9rem] lg:text-[1rem];
     background-color: var(--accent);
@@ -149,7 +149,7 @@ body {
   }
 
   .icon-toggle-btn {
-    @apply border border-solid rounded-[6px] w-9 h-9 flex items-center justify-center cursor-pointer transition-colors duration-200 ease-in-out;
+    @apply border border-solid rounded-md w-9 h-9 flex items-center justify-center cursor-pointer transition-colors duration-200 ease-in-out;
     @apply bg-transparent text-[#94a3b8] hover:bg-white/10 hover:text-[#f8fafc] hover:border-white/25;
     border-color: var(--border-color, rgba(255, 255, 255, 0.1));
   }
@@ -174,7 +174,7 @@ body {
 
   /* Metadata Drawer Layout */
   .meta-drawer {
-    @apply w-full max-h-0 overflow-hidden opacity-0 bg-[#0f172a]/30 rounded-[8px] border border-solid border-transparent;
+    @apply w-full max-h-0 overflow-hidden opacity-0 bg-[#0f172a]/30 rounded-lg border border-solid border-transparent;
     transition: max-height 0.35s ease-out,
       margin-top 0.35s ease,
       padding 0.35s ease-out,
@@ -185,7 +185,7 @@ body {
   }
 
   .meta-drawer.open {
-    @apply w-full max-h-[77vh] sm:max-h-[80vh];
+    @apply w-full max-h-[77vh] sm:max-h-[81vh] lg:max-h-[80vh];
     @apply overflow-y-auto p-4 opacity-100;
     border-color: var(--border-color, rgba(255, 255, 255, 0.1));
   }
@@ -234,7 +234,7 @@ body {
 
   /* Meta Loading Indicator Banner */
   .meta-loading {
-    @apply flex items-center gap-2.5 py-2 px-3 rounded-[6px] bg-[#090d16] border border-solid border-cyan-500/20 text-[0.85rem];
+    @apply flex items-center gap-2.5 py-2 px-3 rounded-md bg-[#090d16] border border-solid border-cyan-500/20 text-[0.85rem];
   }
 
   .loading-shimmer-text {
@@ -259,7 +259,7 @@ body {
 
   /* Shared Metric Card Frame */
   .metric-card {
-    @apply relative flex flex-col items-center justify-between p-3.5 rounded-xl bg-slate-900/60 border border-white/10 backdrop-blur-md transition-all duration-300 ease-out hover:border-cyan-500/40 hover:-translate-y-0.5;
+    @apply relative flex flex-col items-center justify-between p-3.5 rounded-xl bg-slate-900/60 border border-white/10 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5;
     @apply hover:shadow-[0_0_18px_rgba(56,189,248,0.15)];
   }
 
@@ -289,7 +289,7 @@ body {
   }
 
   .gauge-card {
-    @apply bg-slate-900/70 border-slate-800/80 hover:border-cyan-500/50;
+    @apply bg-slate-900/70  ;
   }
 
   /* Gauge Card Container */
@@ -413,16 +413,16 @@ body {
   }
 
   pre {
-    @apply bg-[#090d16] p-[0.75rem] rounded-[6px] overflow-x-auto text-[#34d399] text-[0.85rem] m-0 border border-solid border-[#1e293b];
+    @apply bg-[#090d16] p-3 rounded-md overflow-x-auto text-[#34d399] text-[0.85rem] m-0 border border-solid border-[#1e293b];
   }
 
   .canvas-container {
-    @apply bg-[#040711] border border-solid rounded-[8px] overflow-hidden mb-4;
+    @apply bg-[#040711] border border-solid rounded-lg overflow-hidden mb-4;
     border-color: var(--border-color);
   }
 
   canvas {
-    @apply w-full h-[38vh] min-h-[220px] max-h-[480px] block;
+    @apply w-full h-[38vh] min-h-55 max-h-120 block;
   }
 
   .controls-row {
@@ -430,7 +430,7 @@ body {
   }
 
   .control-btn {
-    @apply text-[#0f172a] border-none font-bold py-2 px-5 rounded-[6px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply text-[#0f172a] border-none font-bold py-2 px-5 rounded-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
     @apply text-[0.75rem] sm:text-[0.8rem] lg:text-sm;
     font-family: var(--font-mono);
     background-color: var(--accent);
@@ -470,17 +470,17 @@ body {
 
   /* Flex Wrapper for Right-Side Actions */
   .header-actions {
-    @apply flex items-center gap-[0.75rem];
+    @apply flex items-center gap-3;
   }
 
   /* Toggle Pill Container */
   .toggle-group {
-    @apply flex flex-wrap bg-[#0f172a]/60 border border-solid rounded-[20px] p-[3px] w-[80%];
+    @apply flex flex-wrap bg-[#0f172a]/60 border border-solid rounded-[20px] p-0.75 w-[80%];
     border-color: var(--border-color);
   }
 
   .toggle-btn {
-    @apply bg-transparent border-none text-[0.75rem] font-semibold py-[0.35rem] px-[0.85rem] rounded-[16px] cursor-pointer transition-all duration-200 ease-in-out;
+    @apply bg-transparent border-none text-[0.75rem] font-semibold py-[0.35rem] px-[0.85rem] rounded-2xl cursor-pointer transition-all duration-200 ease-in-out;
     color: var(--text-muted);
     font-family: var(--font-mono);
   }
@@ -496,7 +496,7 @@ body {
 
   /* Config Toggle Button */
   .config-toggle-btn {
-    @apply bg-transparent border border-solid text-[0.9rem] w-[34px] h-[34px] p-0 flex items-center justify-center rounded-[8px] cursor-pointer transition-all duration-200 ease-in-out hover:bg-white/[0.08] hover:border-white/25 active:scale-95;
+    @apply bg-transparent border border-solid text-[0.9rem] w-8.5 h-8.5 p-0 flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200 ease-in-out hover:bg-white/8 hover:border-white/25 active:scale-95;
     color: var(--text-main);
     font-family: var(--font-mono);
     border-color: var(--border-color);
@@ -509,12 +509,12 @@ body {
 
   /* Config Drawer Layout */
   .config-drawer {
-    @apply max-h-0 overflow-hidden opacity-0 bg-[#0f172a]/40 rounded-[8px] border border-solid border-transparent;
+    @apply max-h-0 overflow-hidden opacity-0 bg-[#0f172a]/40 rounded-lg border border-solid border-transparent;
     transition: max-height 0.35s ease-out, margin-top 0.35s ease-out, padding 0.35s ease-out, opacity 0.25s ease-out;
   }
 
   .config-drawer.open {
-    @apply max-h-[500px] mt-4 p-4 opacity-100;
+    @apply max-h-125 mt-4 p-4 opacity-100;
     border-color: var(--border-color);
   }
 
