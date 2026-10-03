@@ -6,6 +6,12 @@ import type { AudioStats, MetadataResult, MetadataRow } from '../types/metadata'
 import { getScoreColor } from '../utils/metadataColors';
 import { formatAudioTime, generateGaugeTicks } from '../utils/formatting';
 
+// Helper to patch rows cleanly without index boilerplate
+const patch = (rows: MetadataRow[], label: string, update: Partial<MetadataRow>) => {
+    const row = rows.find(r => r.label === label);
+    if (row) Object.assign(row, update);
+};
+
 /**
  * Loads and extracts all audio metadata asynchronously.
  */
@@ -13,18 +19,21 @@ export async function loadMetadata(
     data: Float32Array,
     buffer: AudioBuffer,
     rightData: Float32Array | null,
-    onProgress?: (partialRows: MetadataRow[]) => void
+    onProgress?: (rows: MetadataRow[]) => void,
+    onPlaceholderChange?: (text: string) => void
 ): Promise<MetadataResult> {
-    const rows: MetadataRow[] = [];
     const { numberOfChannels: channels, duration, sampleRate, length } = buffer;
 
+    onPlaceholderChange?.("Initializing metadata analysis...");
+    
     const totalSamples = data.length;
     const arrayShape = channels > 1 ? [channels, totalSamples] : [totalSamples];
-    // const arrayShape = channels > 1 ? `[${channels}, ${totalSamples}]` : `[${totalSamples}]`;
     const memoryMb = ((totalSamples * channels * 4) / (1024 * 1024));
 
-    // Basic Buffer Info
-    rows.push({
+    const placeholderStr = "...";
+
+    // Define ALL rows up front with placeholder / basic state
+    const rows: MetadataRow[] = [{
         label: "Channels",
         value: `${channels} (${channels === 1 ? 'Mono' : 'Stereo'})`,
         info: "Number of independent audio channels. Standard tracks are 1 (Mono, centered) or 2 (Stereo, left/right spatially targeted)."
@@ -48,29 +57,13 @@ export async function loadMetadata(
         label: "Decoded Memory Size",
         value: `~${memoryMb.toFixed(3)} MB`,
         info: "Uncompressed RAM footprint of decoded 32-bit floating-point PCM buffers."
-    });
-    onProgress?.([...rows]);
-
-    // Async Tempo & Time Domain Processing
-    const [tempoStats, timeStats] = await Promise.all([
-        estimateTempo(data, sampleRate),
-        computeTimeDomainFeatures(data, rightData, buffer),
-    ]);
-
-    rows.push({
+    }, {
         label: "Estimated Tempo (BPM)",
-        value: tempoStats.confidence > 0.25
-            ? `~${tempoStats.bpm} BPM (${Math.round(tempoStats.confidence * 100)}% confidence)`
-            : "Undetected / Ambient",
+        value: placeholderStr,
         info: "Estimated tempo calculated from rhythmic energy onsets. Standard music spans 70 BPM to 140 BPM. Confidence indicates how clear and regular the rhythmic beat grid is (high for dance/pop, low for ambient/classical)."
-    });
-    onProgress?.([...rows]);
-
-    rows.push({
+    }, {
         label: "Estimated Bit Depth",
-        value: `${timeStats.bitDepth}`,
-        numericVal: parseInt(timeStats.bitDepth.match(/\d+/)?.[0] ?? '0', 10),
-        color: getScoreColor(timeStats.bitDepth, 'bitDepth'),
+        value: placeholderStr,
         info: "Resolution of amplitude quantization. 16-bit PCM (step diff ~0.00003) is CD standard; 24-bit/32-bit Float offers dynamic range exceeding 120 dB. Higher is cleaner.",
         gaugeConfig: {
             min: 8,
@@ -84,17 +77,15 @@ export async function loadMetadata(
         },
     }, {
         label: "Min Amplitude Value",
-        value: `${timeStats.minVal.toFixed(6)}`,
+        value: placeholderStr,
         info: "Lowest negative sample peak. Standard normalized range spans -1.0 to 0.0."
     }, {
         label: "Max Amplitude Value",
-        value: `${timeStats.maxVal.toFixed(6)}`,
+        value: placeholderStr,
         info: "Highest positive sample peak. Standard normalized range spans 0.0 to +1.0."
     }, {
         label: "Peak Signal (dBFS)",
-        value: `${timeStats.peakDb.toFixed(2)} dB`,
-        numericVal: timeStats.peakDb,
-        color: getScoreColor(timeStats.peakDb, 'peakDb'),
+        value: placeholderStr,
         info: "Maximum instantaneous amplitude relative to digital ceiling (0.0 dBFS). Optimal master levels rest between -1.0 dBFS and -0.3 dBFS to prevent DAC inter-sample clipping.",
         gaugeConfig: {
             min: -24,
@@ -109,9 +100,7 @@ export async function loadMetadata(
         }
     }, {
         label: "RMS Energy (Linear)",
-        value: `${timeStats.rmsVal.toFixed(6)}`,
-        numericVal: timeStats.rmsVal,
-        color: getScoreColor(timeStats.rmsVal, 'rmsVal'),
+        value: placeholderStr,
         info: "Root Mean Square linear average power (0.0 silence to 1.0 full square wave). Optimal musical density rests between 0.10 and 0.20.",
         gaugeConfig: {
             min: 0,
@@ -127,10 +116,7 @@ export async function loadMetadata(
         },
     }, {
         label: "RMS Power (dBFS)",
-        // value: `${timeStats.rmsDb.toFixed(2)} dB (${timeStats.rmsVal.toFixed(4)})`,
-        value: `${timeStats.rmsDb.toFixed(2)} dB`,
-        numericVal: timeStats.rmsDb,
-        color: getScoreColor(timeStats.rmsDb, 'rmsDb'),
+        value: placeholderStr,
         info: "Average perceived loudness/energy level. Range: -∞ (silence) to 0.0 dBFS. Optimal commercial audio rests between -18.0 dBFS (dynamic) and -10.0 dBFS (loud/compressed).",
         gaugeConfig: {
             min: -40,
@@ -146,9 +132,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Dynamic Range (Crest)",
-        value: `${timeStats.crestFactorDb.toFixed(2)} dB`,
-        numericVal: timeStats.crestFactorDb,
-        color: getScoreColor(timeStats.crestFactorDb, 'crestFactorDb'),
+        value: placeholderStr,
         info: "Peak-to-RMS ratio measuring dynamic punch. 0 dB indicates heavy brickwall limiting/square wave; >18 dB indicates high dynamic contrast (classical/orchestral). Optimal range: 10 dB to 16 dB.",
         gaugeConfig: {
             min: 0,
@@ -164,9 +148,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Signal-to-DC Ratio",
-        value: `${timeStats.sdrDb} dB`,
-        numericVal: timeStats.sdrVal ?? undefined,
-        color: getScoreColor(timeStats.sdrVal ?? '', 'sdrDb'),
+        value: placeholderStr,
         info: "Ratio of useful AC audio power to static DC offset power. <20 dB indicates severe DC bias degradation; >60 dB indicates pristine signal purity.",
         gaugeConfig: {
             min: 0,
@@ -180,9 +162,7 @@ export async function loadMetadata(
         },
     }, {
         label: "DC Offset",
-        value: `${timeStats.dcOffset > 0 ? '+' : ''}${timeStats.dcOffset.toFixed(6)}`,
-        numericVal: timeStats.dcOffset,
-        color: getScoreColor(timeStats.dcOffset, 'dcOffset'),
+        value: placeholderStr,
         info: "Average signal deviation from zero-volt center line (-1.0 to +1.0). Non-zero values consume headroom and cause driver pop artifacts. Optimal target: 0.000000.",
         gaugeConfig: {
             min: -0.02,
@@ -198,9 +178,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Mean Absolute Value (MAV)",
-        value: `${timeStats.mavVal.toFixed(6)}`,
-        numericVal: timeStats.mavVal,
-        color: getScoreColor(timeStats.mavVal, 'mavVal'),
+        value: placeholderStr,
         info: "Average absolute amplitude deviation from zero (0.0 to 1.0). Reflects raw waveform area density. Optimal range: 0.08 to 0.15.",
         gaugeConfig: {
             min: 0,
@@ -216,17 +194,15 @@ export async function loadMetadata(
         },
     }, {
         label: "Avg Zero-Cross Frequency",
-        value: `~${Math.round(timeStats.zcrHz)} Hz`,
+        value: placeholderStr,
         info: "Estimated fundamental frequency bias based on mean signal zero-crossing points per second. Range: 0 Hz to Nyquist (Sample Rate / 2)."
     }, {
         label: "Zero-Crossing Rate (ZCR)",
-        value: `${(timeStats.zcrRatio * 100).toFixed(2)}% (${timeStats.totalCrossings.toLocaleString()} crossings)`,
+        value: placeholderStr,
         info: "Percentage of adjacent sample pairs that cross zero amplitude. Low values (<2%) indicate deep bass/sub-tones; high values (>15%) indicate bright, percussive, or noisy content."
     }, {
         label: "Temporal Centroid",
-        value: `${(timeStats.temporalCentroidNorm * 100).toFixed(1)}% into timeline (at ${formatAudioTime(timeStats.temporalCentroidSec)})`,
-        numericVal: timeStats.temporalCentroidNorm,
-        color: getScoreColor(timeStats.temporalCentroidNorm, 'temporalCentroidNorm'),
+        value: placeholderStr,
         info: "The center of gravity of sound energy over time. <35% implies energy is front-loaded (percussive impacts/snaps); >65% implies back-loaded energy (swells/risers/fades).",
         gaugeConfig: {
             min: 0,
@@ -242,17 +218,15 @@ export async function loadMetadata(
         },
     }, {
         label: "Energy Time Bias",
-        value: timeStats.energyDistributionLabel,
+        value: placeholderStr,
         info: "Characterizes how energy is distributed across the track duration based on the temporal centroid."
     }, {
         label: "Envelope Attack Time",
-        value: `${timeStats.envelopeAttackTimeSec.toFixed(3)}s`,
+        value: placeholderStr,
         info: "Time elapsed from the start of the audio file to the occurrence of the absolute maximum peak signal."
     }, {
         label: "Envelope Peak-to-Mean Ratio",
-        value: `${timeStats.envelopePeakToMeanRatio.toFixed(2)}x`,
-        numericVal: timeStats.envelopePeakToMeanRatio,
-        color: getScoreColor(timeStats.envelopePeakToMeanRatio, 'peakToMeanRatio'),
+        value: placeholderStr,
         info: "Ratio of peak amplitude to mean absolute value (MAV). Higher ratios (>8.0x) indicate highly transient, spiky envelopes with sharp attacks.",
         gaugeConfig: {
             min: 1.0,
@@ -268,17 +242,15 @@ export async function loadMetadata(
         },
     }, {
         label: "Transient Profile (Kurtosis)",
-        value: `${timeStats.transientProfile} (${timeStats.kurtosis.toFixed(2)})`,
+        value: placeholderStr,
         info: "Statistical sharpness of the envelope. Values < 0 indicate smooth/sustained pads; 0 to 3 indicate natural dynamics; > 5 indicates sharp percussive spikes/transients."
     }, {
         label: "Estimated Pitch / Tone Bias",
-        value: timeStats.prominentBand,
+        value: placeholderStr,
         info: "Dominant frequency band derived from ZCR. Categorized as Bass (<300 Hz), Midrange (300 Hz - 2000 Hz), or Treble (>2000 Hz)."
     }, {
         label: "Stereo Image Width",
-        value: `${timeStats.stereoWidthLabel}\n(Correlation: ${timeStats.stereoCorrelationVal.toFixed(2)})`,
-        numericVal: timeStats.stereoCorrelationVal,
-        color: rightData ? getScoreColor(timeStats.stereoCorrelationVal, 'stereoCorr') : null,
+        value: placeholderStr,
         info: "Phase agreement between left and right channels (-1.0 to +1.0). +1.0 represents mono alignment, 0.2 to 0.7 represents optimal stereo width, and negative values indicate out-of-phase cancellation.",
         gaugeConfig: {
             min: -1.0,
@@ -293,9 +265,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Clipped Samples",
-        value: timeStats.clipCount.toLocaleString(),
-        numericVal: timeStats.clipCount,
-        color: getScoreColor(timeStats.clipCount, 'clipCount'),
+        value: placeholderStr,
         info: "Total samples reaching or exceeding maximum digital headroom (±0.999). 0 is optimal; >0 indicates digital overload distortion.",
         gaugeConfig: {
             min: 0,
@@ -307,25 +277,17 @@ export async function loadMetadata(
                 { min: 50, max: 100, color: '#e74c3c' },  // Red (Severe clipping)
             ],
         },
-    });
-    onProgress?.([...rows]);
-
-    // Async Spectral Processing
-    const spectralStats = await computeSpectralFeatures(data, sampleRate);
-
-    rows.push({
+    }, {
         label: "Spectral Centroid",
-        value: `${Math.round(spectralStats.avgCentroid)} Hz`,
+        value: placeholderStr,
         info: "Center of gravity of the frequency spectrum. Higher values (> 3,000 Hz) represent brighter, treble-heavy audio, while lower values (< 1,000 Hz) represent darker, bass-heavy audio."
     }, {
         label: "Spectral Spread (Bandwidth)",
-        value: `${Math.round(spectralStats.avgSpread)} Hz`,
+        value: placeholderStr,
         info: "Variance of frequencies around the Spectral Centroid. Low values (< 1,500 Hz) indicate narrow-band focused tones, while high values (> 3,500 Hz) indicate wide-band complex signals or noise."
     }, {
         label: "Spectral Roll-off (85%)",
-        value: `${Math.round(spectralStats.avgRolloff)} Hz`,
-        numericVal: spectralStats.avgRolloff,
-        color: getScoreColor(spectralStats.avgRolloff, 'spectralRolloff'),
+        value: placeholderStr,
         info: "Frequency threshold below which 85% of total spectral energy lies. Distinguishes between muffled/dull sounds (< 2 kHz) and crisp/bright sounds (> 4 kHz).",
         gaugeConfig: {
             min: 0,
@@ -341,9 +303,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Spectral Flatness",
-        value: `${spectralStats.avgFlatness.toFixed(4)} (${(spectralStats.avgFlatness * 100).toFixed(1)}%)`,
-        numericVal: spectralStats.avgFlatness,
-        color: getScoreColor(spectralStats.avgFlatness, 'spectralFlatness'),
+        value: placeholderStr,
         info: "Ratio of geometric to arithmetic mean of the spectrum (0.0 pure tone to 1.0 white noise). Scores below 0.35 signify strong musical tonality, while values above 0.50 or 50% indicate white noise or pure percussive noise.",
         gaugeConfig: {
             min: 0,
@@ -357,9 +317,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Spectral Crest Factor",
-        value: `${spectralStats.avgCrestFactor.toFixed(2)}`,
-        numericVal: spectralStats.avgCrestFactor,
-        color: getScoreColor(spectralStats.avgCrestFactor, 'spectralCrest'),
+        value: placeholderStr,
         info: "Ratio of peak frequency bin magnitude to average magnitude. High values (> 4.0) indicate prominent tonal peaks, while low values (< 2.0) represent a flat noise floor.",
         gaugeConfig: {
             min: 1.0,
@@ -373,9 +331,7 @@ export async function loadMetadata(
         },
     }, {
         label: "Band Energy Ratio (Sub-2kHz)",
-        value: `${spectralStats.avgBandEnergyRatio.toFixed(4)} (${(spectralStats.avgBandEnergyRatio * 100).toFixed(1)}%)`,
-        numericVal: spectralStats.avgBandEnergyRatio,
-        color: getScoreColor(spectralStats.avgBandEnergyRatio, 'bandEnergyRatio'),
+        value: placeholderStr,
         info: "Fraction of total spectral energy contained below 2 kHz. Standard music rests between 50% and 85%; extremely high values (> 90%) indicate heavy bass dominance.",
         gaugeConfig: {
             min: 0,
@@ -391,16 +347,156 @@ export async function loadMetadata(
         },
     }, {
         label: "Spectral Slope",
-        value: `${spectralStats.avgSlope.toExponential(4)}`,
+        value: placeholderStr,
         info: "Rate of spectral energy decay across increasing frequencies using linear regression. Almost always negative in natural audio as high frequencies naturally roll off, while values near 0 indicate flat energy spread across frequencies."
     }, {
         label: "Spectral Flux",
-        value: `${spectralStats.avgFlux.toFixed(4)}`,
+        value: placeholderStr,
         info: "Average frame-to-frame rate of frequency change. Higher values (> 1.5) indicate fast-changing timbral activity or percussive transients, while low values (< 0.5) indicate smooth, sustained audio."
-    });
+    }];
+
+    // Emit initial layout structure immediately
     onProgress?.([...rows]);
 
-    // 5. Extract Text Descriptor
+    // Now we update all metric values in-place--->
+    // Async Tempo & Time Domain Processing
+    onPlaceholderChange?.("Calculating time-domain and tempo features...");
+    const [tempoStats, timeStats] = await Promise.all([
+        estimateTempo(data, sampleRate),
+        computeTimeDomainFeatures(data, rightData, buffer),
+    ]);
+    patch(rows, "Estimated Tempo (BPM)", {
+        value: tempoStats.confidence > 0.25
+            ? `~${tempoStats.bpm} BPM (${Math.round(tempoStats.confidence * 100)}% confidence)`
+            : "Undetected / Ambient",
+    });
+    patch(rows, "Estimated Bit Depth", {
+        value: `${timeStats.bitDepth}`,
+        numericVal: parseInt(timeStats.bitDepth.match(/\d+/)?.[0] ?? '0', 10),
+        color: getScoreColor(timeStats.bitDepth, 'bitDepth'),
+    });
+    patch(rows, "Min Amplitude Value", {
+        value: `${timeStats.minVal.toFixed(6)}`,
+    });
+    patch(rows, "Max Amplitude Value", {
+        value: `${timeStats.maxVal.toFixed(6)}`,
+    });
+    patch(rows, "Peak Signal (dBFS)", {
+        value: `${timeStats.peakDb.toFixed(2)} dB`,
+        numericVal: timeStats.peakDb,
+        color: getScoreColor(timeStats.peakDb, 'peakDb')
+    });
+    patch(rows, "RMS Energy (Linear)", {
+        value: `${timeStats.rmsVal.toFixed(6)}`,
+        numericVal: timeStats.rmsVal,
+        color: getScoreColor(timeStats.rmsVal, 'rmsVal'),
+    });
+    patch(rows, "RMS Power (dBFS)", {
+        value: `${timeStats.rmsDb.toFixed(2)} dB`,
+        numericVal: timeStats.rmsDb,
+        color: getScoreColor(timeStats.rmsDb, 'rmsDb'),
+    });
+    patch(rows, "Dynamic Range (Crest)", {
+        value: `${timeStats.crestFactorDb.toFixed(2)} dB`,
+        numericVal: timeStats.crestFactorDb,
+        color: getScoreColor(timeStats.crestFactorDb, 'crestFactorDb'),
+    });
+    patch(rows, "Signal-to-DC Ratio", {
+        value: `${timeStats.sdrDb} dB`,
+        numericVal: timeStats.sdrVal ?? undefined,
+        color: getScoreColor(timeStats.sdrVal ?? '', 'sdrDb'),
+    });
+    patch(rows, "DC Offset", {
+        value: `${timeStats.dcOffset > 0 ? '+' : ''}${timeStats.dcOffset.toFixed(6)}`,
+        numericVal: timeStats.dcOffset,
+        color: getScoreColor(timeStats.dcOffset, 'dcOffset'),
+    });
+    patch(rows, "Mean Absolute Value (MAV)", {
+        value: `${timeStats.mavVal.toFixed(6)}`,
+        numericVal: timeStats.mavVal,
+        color: getScoreColor(timeStats.mavVal, 'mavVal'),
+    });
+    patch(rows, "Avg Zero-Cross Frequency", {
+        value: `~${Math.round(timeStats.zcrHz)} Hz`,
+    });
+    patch(rows, "Zero-Crossing Rate (ZCR)", {
+        value: `${(timeStats.zcrRatio * 100).toFixed(2)}% (${timeStats.totalCrossings.toLocaleString()} crossings)`,
+    });
+    patch(rows, "Temporal Centroid", {
+        value: `${(timeStats.temporalCentroidNorm * 100).toFixed(1)}% into timeline (at ${formatAudioTime(timeStats.temporalCentroidSec)})`,
+        numericVal: timeStats.temporalCentroidNorm,
+        color: getScoreColor(timeStats.temporalCentroidNorm, 'temporalCentroidNorm'),
+
+    });
+    patch(rows, "Energy Time Bias", {
+        value: timeStats.energyDistributionLabel,
+    });
+    patch(rows, "Envelope Attack Time", {
+        value: `${timeStats.envelopeAttackTimeSec.toFixed(3)}s`,
+    });
+    patch(rows, "Envelope Peak-to-Mean Ratio", {
+        value: `${timeStats.envelopePeakToMeanRatio.toFixed(2)}x`,
+        numericVal: timeStats.envelopePeakToMeanRatio,
+        color: getScoreColor(timeStats.envelopePeakToMeanRatio, 'peakToMeanRatio'),
+    });
+    patch(rows, "Transient Profile (Kurtosis)", {
+        value: `${timeStats.transientProfile} (${timeStats.kurtosis.toFixed(2)})`,
+    });
+    patch(rows, "Estimated Pitch / Tone Bias", {
+        value: timeStats.prominentBand,
+    });
+    patch(rows, "Stereo Image Width", {
+        value: `${timeStats.stereoWidthLabel}\n(Correlation: ${timeStats.stereoCorrelationVal.toFixed(2)})`,
+        numericVal: timeStats.stereoCorrelationVal,
+        color: rightData ? getScoreColor(timeStats.stereoCorrelationVal, 'stereoCorr') : null,
+    });
+    patch(rows, "Clipped Samples", {
+        value: timeStats.clipCount.toLocaleString(),
+        numericVal: timeStats.clipCount,
+        color: getScoreColor(timeStats.clipCount, 'clipCount'),
+    });
+
+    // Async Spectral Processing
+    onPlaceholderChange?.("Analyzing frequency spectrum...");
+    const spectralStats = await computeSpectralFeatures(data, sampleRate);
+    patch(rows, "Spectral Centroid", {
+        value: `${Math.round(spectralStats.avgCentroid)} Hz`,
+    });
+    patch(rows, "Spectral Spread (Bandwidth)", {
+        value: `${Math.round(spectralStats.avgSpread)} Hz`,
+    });
+    patch(rows, "Spectral Roll-off (85%)", {
+        value: `${Math.round(spectralStats.avgRolloff)} Hz`,
+        numericVal: spectralStats.avgRolloff,
+        color: getScoreColor(spectralStats.avgRolloff, 'spectralRolloff'),
+    });
+    patch(rows, "Spectral Flatness", {
+        value: `${spectralStats.avgFlatness.toFixed(4)} (${(spectralStats.avgFlatness * 100).toFixed(1)}%)`,
+        numericVal: spectralStats.avgFlatness,
+        color: getScoreColor(spectralStats.avgFlatness, 'spectralFlatness'),
+    });
+    patch(rows, "Spectral Crest Factor", {
+        value: `${spectralStats.avgCrestFactor.toFixed(2)}`,
+        numericVal: spectralStats.avgCrestFactor,
+        color: getScoreColor(spectralStats.avgCrestFactor, 'spectralCrest'),
+    });
+    patch(rows, "Band Energy Ratio (Sub-2kHz)", {
+        value: `${spectralStats.avgBandEnergyRatio.toFixed(4)} (${(spectralStats.avgBandEnergyRatio * 100).toFixed(1)}%)`,
+        numericVal: spectralStats.avgBandEnergyRatio,
+        color: getScoreColor(spectralStats.avgBandEnergyRatio, 'bandEnergyRatio'),
+    });
+    patch(rows, "Spectral Slope", {
+        value: `${spectralStats.avgSlope.toExponential(4)}`,
+    });
+    patch(rows, "Spectral Flux", {
+        value: `${spectralStats.avgFlux.toFixed(4)}`,
+    });
+
+    // Emit progression
+    onProgress?.([...rows]);
+
+    // Finally, Extract Text Descriptors
+    onPlaceholderChange?.("Deriving audio descriptors...");
     const allStats: AudioStats = {
         ...{ channels, duration, length, sampleRate, totalSamples, arrayShape, memoryMb },
         ...spectralStats,

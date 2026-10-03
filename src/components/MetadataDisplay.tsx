@@ -26,8 +26,8 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
         return <div className="placeholder-text error-text">{placeholderText || 'An error occurred while analyzing metadata.'}</div>;
     }
 
-    // Otherwise show Empty or Loading State (when no rows are computed yet)
-    if (!rows || rows.length === 0) {
+    // Show Empty State ONLY if not loading and no rows exist yet
+    if (!isLoading && (!rows || rows.length === 0)) {
         return <div className="placeholder-text flex justify-center">{placeholderText || 'Load an audio file to view metadata.'}</div>;
     }
 
@@ -63,12 +63,19 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
 
             {/* Flexible Adaptive Grid for Metric Cards */}
             <div className="meta-grid">
-                {rows.map((row, idx) => {
-                    const isGaugeMetric = Boolean(row.color);
+                {/* {rows.map((row, idx) => { */}
+                {rows.map((row) => {
+                    const isGaugeMetric = Boolean(row.gaugeConfig);
+
+                    // Use placeholder values during track processing
+                    const minVal = row.gaugeConfig?.min ?? 0;
+                    const displayValue = isLoading ? "..." : row.value;
+                    const numericValue = isLoading ? minVal : row.numericVal;
 
                     return (
                         <div
-                            key={`${row.label}-${idx}`}
+                            // key={`${row.label}-${idx}`}
+                            key={row.label}
                             className={`metric-card ${isGaugeMetric ? 'gauge-card' : 'info-card'}`}
                             onMouseEnter={() => setActiveHoveredInfo(row.info || null)}
                             onMouseLeave={() => setActiveHoveredInfo(null)}
@@ -76,8 +83,10 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
                             {isGaugeMetric ? (
                                 <div className="gauge-card-inner">
                                     <MetricGauge
-                                        value={row.value}
-                                        numericVal={row.numericVal}
+                                        // value={row.value}
+                                        value={displayValue}
+                                        // numericVal={row.numericVal}
+                                        numericVal={numericValue}
                                         color={row.color || '#2ecc71'}
                                         min={row.gaugeConfig?.min}
                                         max={row.gaugeConfig?.max}
@@ -91,7 +100,7 @@ export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
                             ) : (
                                 <div className="info-card-inner">
                                     <div className="lcd-screen">
-                                        <span className="lcd-value">{row.value}</span>
+                                        <span className="lcd-value">{displayValue}</span>
                                     </div>
                                     <div className="metric-label-group">
                                         <span className="metric-name">{row.label}</span>

@@ -22,7 +22,6 @@ export const AudioVisualizer: React.FC = () => {
     const [fileInfo, setFileInfo] = useState<AudioFileInfo | null>(null);
 
     // Metadata Display State
-    // const [metadata, setMetadata] = useState<MetadataRecord | null>(null);
     const [metaPlaceholder, setMetaPlaceholder] = useState<string>('');
     const [metadataRows, setMetadataRows] = useState<MetadataRow[]>([]);
     const [progressText, setProgressText] = useState<string>('0.00s / 0.00s');
@@ -268,6 +267,7 @@ export const AudioVisualizer: React.FC = () => {
 
         setMetaPlaceholder('Decoding audio file into raw PCM array...');
         setMetaError(false);
+        setDescriptors([]);
         setIsMetaLoading(true);
 
         try {
@@ -302,9 +302,13 @@ export const AudioVisualizer: React.FC = () => {
             }
 
             // Load all other metadata asynchronously with progressive state updates
-            const result = await loadMetadata(leftData, decodedBuffer, rightData, (partialRows) => {
-                setMetadataRows(partialRows);
-            });
+            const result = await loadMetadata(
+                leftData,
+                decodedBuffer,
+                rightData,
+                (partialRows) => setMetadataRows(partialRows),
+                setMetaPlaceholder
+            );
 
             setMetadataRows(result.rows);
             setDescriptors(result.audioDescriptors);
@@ -316,6 +320,7 @@ export const AudioVisualizer: React.FC = () => {
             setMetaPlaceholder(`Error decoding file: ${(err as Error).message}`);
         } finally {
             setIsMetaLoading(false);
+            // event.target.value = ''; // Allows re-selecting the same file if needed
         }
     };
 
