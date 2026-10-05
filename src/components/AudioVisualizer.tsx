@@ -7,9 +7,10 @@ import { PaletteManager } from './PaletteManager';
 import { drawOscilloscopeFrame, drawSpectrumFrame } from '../utils/canvasRenderers';
 import { loadMetadata } from '../services/metadataLoader';
 import { WINDOW_SIZE_STEPS } from '../constants/window';
+import { AudioScrubber } from './AudioScrubber';
 
 export const AudioVisualizer: React.FC = () => {
-    // Mode & Drawer State (Replaces classList.toggle)
+    // Mode & Drawer State
     const [mode, setMode] = useState<VisualizerMode>('oscilloscope');
     const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
     const [isMetaOpen, setIsMetaOpen] = useState<boolean>(false);
@@ -20,6 +21,8 @@ export const AudioVisualizer: React.FC = () => {
     const [isStereo, setIsStereo] = useState<boolean>(false);
     const [primaryChannel, setPrimaryChannel] = useState<PrimaryChannel>('left');
     const [fileInfo, setFileInfo] = useState<AudioFileInfo | null>(null);
+    const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null); // needed for Scrubber
+    const [currentIndex, setCurrentIndex] = useState<number>(0);
 
     // Metadata Display State
     const [metaPlaceholder, setMetaPlaceholder] = useState<string>('');
@@ -46,7 +49,7 @@ export const AudioVisualizer: React.FC = () => {
         barColors: ['#10b981', '#38bdf8'],
     });
 
-    // DOM Canvas Ref
+    // Main Canvas Ref
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // Web Audio Context & Data Refs
@@ -185,6 +188,7 @@ export const AudioVisualizer: React.FC = () => {
 
         // Reset index and timing references
         currentIndexRef.current = 0;
+        setCurrentIndex(0); // Sync state on reset
         lastTimeRef.current = performance.now();
 
         // Update play state (triggers UI re-render for Play button label)
@@ -212,13 +216,18 @@ export const AudioVisualizer: React.FC = () => {
         const maxIndex = totalSamples - config.windowSize;
 
         if (currentIndexRef.current >= maxIndex) {
-            currentIndexRef.current = Math.max(0, maxIndex);
+            const finalIndex = Math.max(0, maxIndex);
+            currentIndexRef.current = finalIndex;
+            setCurrentIndex(finalIndex); // Sync final frame
             stopAudioPlayback();
             renderCurrentFrame();
             updateProgressUI();
             updatePlayingState(false);
             return;
         }
+
+        // Sync current sample index to state for scrubber playhead rendering
+        setCurrentIndex(currentIndexRef.current);
 
         renderCurrentFrame();
         updateProgressUI();
@@ -259,6 +268,7 @@ export const AudioVisualizer: React.FC = () => {
             try { audioSourceRef.current.stop(); } catch { /* ignore */ }
         }
         currentIndexRef.current = 0;
+        setCurrentIndex(0);            // Sync to state
 
         setFileInfo({
             name: file.name,
@@ -286,6 +296,7 @@ export const AudioVisualizer: React.FC = () => {
 
             const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
             audioBufferRef.current = decodedBuffer;
+            setAudioBuffer(decodedBuffer); // Sync to state for Scrubber
 
             // Extract Channels
             const leftData = decodedBuffer.getChannelData(0);
@@ -343,6 +354,27 @@ export const AudioVisualizer: React.FC = () => {
             stopAudioPlayback();
         };
     }, [stopAudioPlayback]);
+
+    const seekTo = useCallback(async (targetIndex: number) => {
+        const currentBuffer = audioBufferRef.current;
+        if (!currentBuffer) return;
+
+        // Clamp index bounds
+        const maxIndex = currentBuffer.length - config.windowSize;
+        const clampedIndex = Math.max(0, Math.min(targetIndex, maxIndex));
+
+        currentIndexRef.current = clampedIndex;
+        setCurrentIndex(clampedIndex);
+
+        // If audio is currently playing, restart playback at the new seek location
+        if (isPlayingRef.current) {
+            await startAudioPlayback();
+        }
+
+        // Refresh visualizer frame and text UI immediately
+        renderCurrentFrame();
+        updateProgressUI();
+    }, [config.windowSize, startAudioPlayback, renderCurrentFrame, updateProgressUI]);
 
     return (
         <div className="app-container">
@@ -666,6 +698,13 @@ export const AudioVisualizer: React.FC = () => {
                         </button>
 
                         <span id="progressDisplay">{progressText}</span>
+
+                        <AudioScrubber
+                            audioBuffer={audioBuffer}
+                            currentIndex={currentIndex}
+                            isLoaded={isAudioLoaded}
+                            onSeek={seekTo}
+                        />
                     </div>
                 </div>
             </div>
