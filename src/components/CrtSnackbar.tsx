@@ -4,9 +4,9 @@ import { useCrtInspector } from '../hooks/useCrtInspector'; // Adjust path as ne
 export interface CrtSnackbarProps {
   /** The text or message content to render inside the CRT display */
   text: string | null;
-  /** Optional custom icon (defaults to 🛈) */
+  /** Optional custom icon */
   icon?: React.ReactNode;
-  /** Optional click handler if you want the popup to be actionable */
+  /** Optional click handler */
   onClick?: () => void;
 }
 

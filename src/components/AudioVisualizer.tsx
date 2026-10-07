@@ -673,7 +673,7 @@ export const AudioVisualizer: React.FC = () => {
                     </div>
 
                     {/* Main Canvas */}
-                    <div className="canvas-container">
+                    <div className="visualizer-container">
                         <canvas ref={canvasRef} width={800} height={240} />
                     </div>
 
@@ -703,6 +703,7 @@ export const AudioVisualizer: React.FC = () => {
                             audioBuffer={audioBuffer}
                             currentIndex={currentIndex}
                             isLoaded={isAudioLoaded}
+                            windowSize={config.windowSize}
                             onSeek={seekTo}
                         />
                     </div>
