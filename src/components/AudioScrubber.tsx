@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 interface AudioScrubberProps {
     audioBuffer: AudioBuffer | null;
     currentIndex: number;
+    windowSize?: number;
     isLoaded: boolean;
     onSeek: (targetIndex: number) => void;
 }
@@ -10,6 +11,7 @@ interface AudioScrubberProps {
 export const AudioScrubber: React.FC<AudioScrubberProps> = ({
     audioBuffer,
     currentIndex,
+    windowSize,
     isLoaded,
     onSeek,
 }) => {
@@ -26,27 +28,29 @@ export const AudioScrubber: React.FC<AudioScrubberProps> = ({
         onSeekRef.current = onSeek;
     }, [onSeek]);
 
-    // Calculate waveform peaks (memoized)
+    // Calculate waveform peaks
     const peaks = useMemo(() => {
         if (!audioBuffer) return null;
 
         const channelData = audioBuffer.getChannelData(0);
-        const BAR_COUNT = 120;
+        const BAR_COUNT = 100;
         const samplesPerBar = Math.floor(channelData.length / BAR_COUNT);
         const calculatedPeaks = new Float32Array(BAR_COUNT);
+        const step = windowSize && windowSize > 0 ? windowSize : 100;
 
         for (let i = 0; i < BAR_COUNT; i++) {
             const start = i * samplesPerBar;
             let maxVal = 0;
-            for (let j = 0; j < samplesPerBar; j += 10) {
+            for (let j = 0; j < samplesPerBar; j += step) {
                 const absVal = Math.abs(channelData[start + j] || 0);
                 if (absVal > maxVal) maxVal = absVal;
             }
-            calculatedPeaks[i] = maxVal;
+            // fallback to a quiet base height if audio segment is near-silent or zero
+            calculatedPeaks[i] = Math.max(0.03, maxVal);
         }
 
         return calculatedPeaks;
-    }, [audioBuffer]);
+    }, [audioBuffer, windowSize]);
 
     //Helper to compute sample index from client position
     const getSampleIndexFromX = useCallback(
@@ -70,14 +74,11 @@ export const AudioScrubber: React.FC<AudioScrubberProps> = ({
 
         const width = canvas.width;
         const height = canvas.height;
+        const centerY = height / 2;
 
         ctx.clearRect(0, 0, width, height);
 
-        if (!isLoaded || !audioBuffer) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.fillRect(0, 0, width, height);
-            return;
-        }
+        if (!isLoaded || !audioBuffer) return;
 
         const totalSamples = audioBuffer.length;
 
@@ -92,28 +93,30 @@ export const AudioScrubber: React.FC<AudioScrubberProps> = ({
 
         // Draw waveform vertical bars
         if (peaks && peaks.length > 0) {
-            const barWidth = 3;
+            const barWidth = 2;
             const barGap = (width - peaks.length * barWidth) / (peaks.length - 1);
+
+            ctx.lineCap = 'round';
+            ctx.lineWidth = barWidth;
 
             for (let i = 0; i < peaks.length; i++) {
                 const barX = i * (barWidth + barGap);
-                const barHeight = Math.max(4, peaks[i] * (height - 8));
-                const barY = (height - barHeight) / 2;
+                const barHeight = Math.max(0, peaks[i] * (height - 8));
 
-                ctx.fillStyle =
+                const topY = Math.floor(centerY - barHeight / 2);
+                const bottomY = Math.floor(centerY + barHeight / 2);
+
+                ctx.strokeStyle =
                     barX + barWidth <= playheadX
-                        ? '#38bdf8'
-                        : 'rgba(255, 255, 255, 0.2)';
+                        ? 'rgba(56, 189, 248, 0.8)'
+                        : 'rgba(255, 255, 255, 0.1)';
 
                 ctx.beginPath();
-                ctx.roundRect(barX, barY, barWidth, barHeight, 2);
-                ctx.fill();
+                ctx.moveTo(barX, topY);
+                ctx.lineTo(barX, bottomY);
+                ctx.stroke();
             }
         }
-
-        // Draw Playhead Line
-        ctx.fillStyle = isDraggingRef.current ? '#38bdf8' : '#f43f5e';
-        ctx.fillRect(Math.max(0, playheadX - 1.5), 0, 3, height);
     }, [audioBuffer, currentIndex, isLoaded, peaks]);
 
     // Handle container resize
@@ -145,7 +148,7 @@ export const AudioScrubber: React.FC<AudioScrubberProps> = ({
             const targetSample = getSampleIndexFromX(clientX);
             if (targetSample !== null) {
                 dragIndexRef.current = targetSample;
-                // Immediate canvas repaint without React state updates
+                // Immediately repaint canvas
                 drawScrubber();
             }
         },
