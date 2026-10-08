@@ -6,8 +6,10 @@ import { MetadataDisplay } from './MetadataDisplay';
 import { PaletteManager } from './PaletteManager';
 import { drawOscilloscopeFrame, drawSpectrumFrame } from '../utils/canvasRenderers';
 import { loadMetadata } from '../services/metadataLoader';
-import { WINDOW_SIZE_STEPS } from '../constants/window';
+import { BLEND_MODES, SPECTRUM_BAR_STYLES, WINDOW_SIZES } from '../data/constants';
 import { AudioScrubber } from './AudioScrubber';
+import { DEFAULT_CONFIG } from '../data/constants';
+import { ToggleGroup } from './ToggleGroup';
 
 export const AudioVisualizer: React.FC = () => {
     // Mode & Drawer State
@@ -34,19 +36,27 @@ export const AudioVisualizer: React.FC = () => {
 
     // Visualizer Customization Config State
     const [config, setConfig] = useState<VisualizerConfig>({
-        windowSize: 1024,
-        sampleSkip: 9,
-        thickness: 2,
-        secondaryOpacity: 0.5,
-        frequencyCount: 512,
-        barGap: 1.5,
-        barFrequency: 1.0,
-        oscBg: '#1f3626',
-        specBg: '#0c1533',
-        waveformBg: '#5ec7f4',
-        waveformSecondaryBg: '#f472b6',
-        lineGlow: '#38bdf8',
-        barColors: ['#10b981', '#38bdf8'],
+        windowSize: DEFAULT_CONFIG.WINDOW_SIZE,
+        sampleSkip: DEFAULT_CONFIG.SAMPLE_SKIP,
+        thickness: DEFAULT_CONFIG.WAVE_THICKNESS,
+        smoothing: DEFAULT_CONFIG.WAVE_SMOOTHING,
+        frequencyCount: DEFAULT_CONFIG.FREQUENCY_COUNT,
+        barGap: DEFAULT_CONFIG.FREQUENCY_BAR_GAP,
+        barDensity: DEFAULT_CONFIG.FREQUENCY_BAR_DENSITY,
+        oscBg: DEFAULT_CONFIG.OSCILLOSCOPE_BACKGROUND,
+        specBg: DEFAULT_CONFIG.SPECTRUM_VISUALIZER_BACKGROUND,
+        secondaryOpacity: DEFAULT_CONFIG.SECONDARY_WAVE_OPACITY,
+        waveBg: DEFAULT_CONFIG.WAVE_BACKGROUND,
+        waveSecondaryBg: DEFAULT_CONFIG.SECONDARY_WAVE_BACKGROUND,
+        lineGlow: DEFAULT_CONFIG.GLOW_COLOR,
+        barColors: [...DEFAULT_CONFIG.FREQUENCY_BAR_COLORS],
+        barStyle: DEFAULT_CONFIG.FREQUENCY_BAR_STYLE,
+        showGrid: DEFAULT_CONFIG.SHOW_OSCILLOSCOPE_GRID,
+        gridColor: DEFAULT_CONFIG.OSCILLOSCOPE_GRID_COLOR,
+        gridDivisionsX: DEFAULT_CONFIG.OSCILLOSCOPE_GRID_X_DIVISIONS,
+        gridDivisionsY: DEFAULT_CONFIG.OSCILLOSCOPE_GRID_Y_DIVISIONS,
+        gridSubdivisions: DEFAULT_CONFIG.OSCILLOSCOPE_GRID_SUBDIVISIONS,
+        primaryBlendMode: DEFAULT_CONFIG.WAVE_BLEND_MODE
     });
 
     // Main Canvas Ref
@@ -436,7 +446,7 @@ export const AudioVisualizer: React.FC = () => {
                         </h2>
 
                         <div className="header-actions">
-                            <div className="toggle-group">
+                            {/* <div className="toggle-group">
                                 <button
                                     id="oscilloscopeModeBtn"
                                     className={`toggle-btn ${mode === 'oscilloscope' ? 'active' : ''}`}
@@ -453,12 +463,20 @@ export const AudioVisualizer: React.FC = () => {
                                 >
                                     Spectrum
                                 </button>
-                            </div>
+                            </div> */}
+                            <ToggleGroup
+                                value={mode}
+                                onChange={setMode}
+                                options={[
+                                    { label: 'Waveform', value: 'oscilloscope', title: 'Time Domain Waveform' },
+                                    { label: 'Spectrum', value: 'spectrum', title: 'Frequency Spectrum (FFT)' },
+                                ]}
+                            />
 
                             <button
                                 id="toggleConfigBtn"
                                 className={`config-toggle-btn ${isConfigOpen ? 'active' : ''}`}
-                                title="Toggle Configuration Panel"
+                                title="Toggle config panel"
                                 onClick={() => setIsConfigOpen(!isConfigOpen)}
                             >
                                 ⚙️
@@ -492,11 +510,11 @@ export const AudioVisualizer: React.FC = () => {
                                         <input
                                             type="range"
                                             min={0}
-                                            max={WINDOW_SIZE_STEPS.length - 1}
+                                            max={WINDOW_SIZES.length - 1}
                                             step={1}
-                                            value={WINDOW_SIZE_STEPS.indexOf(config.windowSize)}
+                                            value={WINDOW_SIZES.indexOf(config.windowSize)}
                                             onChange={(e) =>
-                                                updateConfig('windowSize', WINDOW_SIZE_STEPS[Number(e.target.value)])
+                                                updateConfig('windowSize', WINDOW_SIZES[Number(e.target.value)])
                                             }
                                         />
                                     </div>
@@ -526,6 +544,64 @@ export const AudioVisualizer: React.FC = () => {
                                     </div>
 
                                     <div className="config-item" data-mode="oscilloscope">
+                                        <label>Smoothing</label>
+                                        {/* <div className="toggle-group">
+                                            <button
+                                                type="button"
+                                                className={`toggle-btn ${config.smoothing ? 'active' : ''}`}
+                                                onClick={() => updateConfig('smoothing', true)}
+                                            >
+                                                On
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`toggle-btn ${!config.smoothing ? 'active' : ''}`}
+                                                onClick={() => updateConfig('smoothing', false)}
+                                            >
+                                                Off
+                                            </button>
+                                        </div> */}
+                                        <ToggleGroup
+                                            value={config.smoothing!}
+                                            onChange={(val) => updateConfig('smoothing', val)}
+                                            options={[
+                                                { label: 'On', value: true },
+                                                { label: 'Off', value: false },
+                                            ]}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Blend Mode</label>
+                                        {/* <div className="toggle-group">
+                                            {BLEND_MODES.map((mode) => (
+                                                <button
+                                                    key={mode}
+                                                    type="button"
+                                                    className={`toggle-btn ${(config.primaryBlendMode ?? 'normal') === mode ? 'active' : ''
+                                                        }`}
+                                                    onClick={() =>
+                                                        updateConfig(
+                                                            'primaryBlendMode',
+                                                            mode === 'none' ? undefined : mode
+                                                        )
+                                                    }
+                                                >
+                                                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div> */}
+                                        <ToggleGroup
+                                            value={config.primaryBlendMode ?? 'normal'}
+                                            onChange={(val) => updateConfig('primaryBlendMode', val === 'normal' ? undefined : val)}
+                                            options={BLEND_MODES.map((mode) => ({
+                                                label: mode.charAt(0).toUpperCase() + mode.slice(1),
+                                                value: mode,
+                                            }))}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
                                         <label>Background</label>
                                         <div className="color-picker-wrapper">
                                             <input
@@ -542,12 +618,92 @@ export const AudioVisualizer: React.FC = () => {
                                         <div className="color-picker-wrapper">
                                             <input
                                                 type="color"
-                                                value={config.waveformBg}
-                                                onChange={(e) => updateConfig('waveformBg', e.target.value)}
+                                                value={config.waveBg}
+                                                onChange={(e) => updateConfig('waveBg', e.target.value)}
                                             />
-                                            <span className="hex-badge">{config.waveformBg}</span>
+                                            <span className="hex-badge">{config.waveBg}</span>
                                         </div>
                                     </div>
+
+                                    <div className="config-item" data-mode="oscilloscope">
+                                        <label>Show Grid</label>
+                                        {/* <div className="toggle-group">
+                                            <button
+                                                type="button"
+                                                className={`toggle-btn ${config.showGrid ? 'active' : ''}`}
+                                                onClick={() => updateConfig('showGrid', true)}
+                                            >
+                                                Show
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`toggle-btn ${!config.showGrid ? 'active' : ''}`}
+                                                onClick={() => updateConfig('showGrid', false)}
+                                            >
+                                                Hide
+                                            </button>
+                                        </div> */}
+                                        <ToggleGroup
+                                            value={config.showGrid!}
+                                            onChange={(val) => updateConfig('showGrid', val)}
+                                            options={[
+                                                { label: 'Show', value: true },
+                                                { label: 'Hide', value: false },
+                                            ]}
+                                        />
+                                    </div>
+
+                                    {config.showGrid && (
+                                        <>
+                                            <div className="config-item" data-mode="oscilloscope">
+                                                <label>Grid Color</label>
+                                                <div className="color-picker-wrapper">
+                                                    <input
+                                                        type="color"
+                                                        value={config.gridColor}
+                                                        onChange={(e) => updateConfig('gridColor', e.target.value)}
+                                                    />
+                                                    <span className="hex-badge">{config.gridColor}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="config-item" data-mode="oscilloscope">
+                                                <label>Grid X Divisions: <span className="val-badge">{config.gridDivisionsX}</span></label>
+                                                <input
+                                                    type="range"
+                                                    min={4}
+                                                    max={32}
+                                                    step={2}
+                                                    value={config.gridDivisionsX}
+                                                    onChange={(e) => updateConfig('gridDivisionsX', Number(e.target.value))}
+                                                />
+                                            </div>
+
+                                            <div className="config-item" data-mode="oscilloscope">
+                                                <label>Grid Y Divisions: <span className="val-badge">{config.gridDivisionsY}</span></label>
+                                                <input
+                                                    type="range"
+                                                    min={2}
+                                                    max={16}
+                                                    step={2}
+                                                    value={config.gridDivisionsY}
+                                                    onChange={(e) => updateConfig('gridDivisionsY', Number(e.target.value))}
+                                                />
+                                            </div>
+
+                                            <div className="config-item" data-mode="oscilloscope">
+                                                <label>Grid Subdivisions: <span className="val-badge">{config.gridSubdivisions}</span></label>
+                                                <input
+                                                    type="range"
+                                                    min={1}
+                                                    max={10}
+                                                    step={1}
+                                                    value={config.gridSubdivisions}
+                                                    onChange={(e) => updateConfig('gridSubdivisions', Number(e.target.value))}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
 
                                     {/* STEREO-ONLY CONTROLS */}
                                     {isStereo && (
@@ -557,16 +713,16 @@ export const AudioVisualizer: React.FC = () => {
                                                 <div className="color-picker-wrapper">
                                                     <input
                                                         type="color"
-                                                        value={config.waveformSecondaryBg}
-                                                        onChange={(e) => updateConfig('waveformSecondaryBg', e.target.value)}
+                                                        value={config.waveSecondaryBg}
+                                                        onChange={(e) => updateConfig('waveSecondaryBg', e.target.value)}
                                                     />
-                                                    <span className="hex-badge">{config.waveformSecondaryBg}</span>
+                                                    <span className="hex-badge">{config.waveSecondaryBg}</span>
                                                 </div>
                                             </div>
 
                                             <div className="config-item stereo-only" data-mode="oscilloscope">
                                                 <label>Primary Channel</label>
-                                                <div className="toggle-group">
+                                                {/* <div className="toggle-group">
                                                     <button
                                                         type="button"
                                                         className={`toggle-btn ${primaryChannel === 'left' ? 'active' : ''}`}
@@ -581,7 +737,15 @@ export const AudioVisualizer: React.FC = () => {
                                                     >
                                                         Right (R)
                                                     </button>
-                                                </div>
+                                                </div> */}
+                                                <ToggleGroup
+                                                    value={primaryChannel}
+                                                    onChange={setPrimaryChannel}
+                                                    options={[
+                                                        { label: 'Left (L)', value: 'left' },
+                                                        { label: 'Right (R)', value: 'right' },
+                                                    ]}
+                                                />
                                             </div>
 
                                             <div className="config-item stereo-only" data-mode="oscilloscope">
@@ -602,7 +766,7 @@ export const AudioVisualizer: React.FC = () => {
                                 /* SPECTRUM SETTINGS */
                                 <>
                                     <div className="config-item" data-mode="spectrum">
-                                        <label>Frequency Count (FFT): <span className="val-badge">{config.frequencyCount}</span></label>
+                                        <label>Frequency Count: <span className="val-badge">{config.frequencyCount}</span></label>
                                         <input
                                             type="range"
                                             min={3}
@@ -636,14 +800,38 @@ export const AudioVisualizer: React.FC = () => {
                                     </div>
 
                                     <div className="config-item" data-mode="spectrum">
-                                        <label>Frequency Span: <span className="val-badge">{Math.round(config.barFrequency * 100)}%</span></label>
+                                        <label>Frequency Span: <span className="val-badge">{Math.round(config.barDensity * 100)}%</span></label>
                                         <input
                                             type="range"
                                             min={0.1}
                                             max={1.0}
                                             step={0.05}
-                                            value={config.barFrequency}
-                                            onChange={(e) => updateConfig('barFrequency', Number(e.target.value))}
+                                            value={config.barDensity}
+                                            onChange={(e) => updateConfig('barDensity', Number(e.target.value))}
+                                        />
+                                    </div>
+
+                                    <div className="config-item" data-mode="spectrum">
+                                        <label>Bar Style</label>
+                                        {/* <div className="toggle-group">
+                                            {SPECTRUM_BAR_STYLES.map((style) => (
+                                                <button
+                                                    key={style}
+                                                    type="button"
+                                                    className={`toggle-btn ${config.barStyle === style ? 'active' : ''}`}
+                                                    onClick={() => updateConfig('barStyle', style)}
+                                                >
+                                                    {style.charAt(0).toUpperCase() + style.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div> */}
+                                        <ToggleGroup
+                                            value={config.barStyle!}
+                                            onChange={(val) => updateConfig('barStyle', val)}
+                                            options={SPECTRUM_BAR_STYLES.map((style) => ({
+                                                label: style.charAt(0).toUpperCase() + style.slice(1),
+                                                value: style,
+                                            }))}
                                         />
                                     </div>
 

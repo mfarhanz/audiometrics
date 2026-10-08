@@ -479,14 +479,16 @@ body {
 
   /* Toggle Pill Container */
   .toggle-group {
-    @apply flex flex-wrap bg-[#0f172a]/60 border border-solid rounded-[20px] p-0.75 w-[80%];
+    @apply inline-flex flex-wrap items-center gap-1 bg-[#0f172a]/60 border border-solid rounded-[20px] p-1 max-w-full;
     border-color: var(--border-color);
+    width: fit-content;
   }
 
   .toggle-btn {
-    @apply bg-transparent border-none text-[0.75rem] font-semibold py-[0.35rem] px-[0.85rem] rounded-2xl cursor-pointer transition-all duration-200 ease-in-out;
+    @apply flex-1 min-w-0 text-center bg-transparent border-none text-[0.75rem] font-semibold py-[0.35rem] px-3 rounded-2xl cursor-pointer transition-all duration-200 ease-in-out truncate;
     color: var(--text-muted);
     font-family: var(--font-mono);
+    white-space: nowrap;
   }
 
   .toggle-btn:hover:not(.active) {
@@ -494,7 +496,7 @@ body {
   }
 
   .toggle-btn.active {
-    @apply text-[#0f172a];
+    @apply text-[#0f172a] shadow-sm;
     background-color: var(--accent);
   }
 
@@ -518,7 +520,7 @@ body {
   }
 
   .config-drawer.open {
-    @apply max-h-125 mt-4 p-4 opacity-100;
+    @apply max-h-250 mt-4 p-4 opacity-100;
     border-color: var(--border-color);
   }
 
